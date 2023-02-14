@@ -4,11 +4,11 @@
 <main class="home w-100 m-auto">
     <p style="color:green;">O arquivo '{{ nome_arquivo }}'' recebido com sucesso!</p>
     <p><b>Delimitador:</b> '{{ delimitador }}'. <b>Encoding:</b> '{{ encoding }}'.</p>
-    <p>Você será redirecionado em 4 segundos...</p>
+    <p>Você será redirecionado em 2 segundos...</p>
     <script>
         var timer = setTimeout(function() {
             window.location='{{ url_for('alinhamento') }}'
-        }, 4000);
+        }, 2000);
     </script>
     <br>
     <p>Caso não seja redirecionado, clique <a href="{{ url_for('alinhamento') }}">aqui</a></p>

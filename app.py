@@ -2,7 +2,7 @@
 # Data de criação: 13/02/2023
 # Descrição: Projeto de mestrado
 # Versão: 1
-# Data de modificação: 13/02/2023
+# Data de modificação: 14/02/2023
 
 from flask import *
 from werkzeug.utils import secure_filename
@@ -41,6 +41,12 @@ esquema_cco = ['Work Type',
 'Location']
 
 
+# To do
+# 1. Recuperar alinhamento salvo por usuário
+# 2. Plotar alinhamento para edição (Editar)
+# 3. Aproveitar alinhamento (Salvar)
+# 4. Plugar projeto de avaliação no novo projeto
+
 
 @app.route("/", methods=["GET"])
 def index():
@@ -76,14 +82,14 @@ def upload():
             m = magic.Magic(mime_encoding=True)
             encoding = m.from_buffer(blob)
             session["encoding"] = encoding
-            print("encoding:", encoding)
+            #print("encoding:", encoding)
 
             sniffer = csv.Sniffer()
             with open(caminho_arquivo_usuario, encoding=encoding) as verificar_delimitador:
                 try:
                     delimitador = sniffer.sniff(verificar_delimitador.read(1240)).delimiter
                     session["delimitador"] = delimitador
-                    print("delimitador:", delimitador)
+                    #print("delimitador:", delimitador)
                 except csv.Error:
                     os.remove(caminho_arquivo_usuario)
                     abort(400)
@@ -99,7 +105,7 @@ def upload():
 @app.route("/alinhamento", methods=["GET", "POST"])
 def alinhamento():
     if request.method == "GET":
-        
+
         dados_alinhamento = pd.read_csv(session["caminho_arquivo"], sep=session["delimitador"], encoding=session["encoding"])
         cabecalho_usuario_lista = dados_alinhamento.columns.tolist()
 
@@ -116,7 +122,7 @@ def alinhamento():
                 lista_pretendentes_croswalk.append(file)
 
         if len(lista_pretendentes_croswalk) > 0:
-            print(lista_pretendentes_croswalk)
+            #print(lista_pretendentes_croswalk)
 
             lista_pretendentes_croswalk_clean = []
             for item in lista_pretendentes_croswalk:
@@ -152,12 +158,29 @@ def alinhamento():
 
         return render_template("index.html")
 
+@app.route("/recuperar_alinhamento", methods=["GET", "POST"])
+def recuperar_alinhamento():
+    if request.method == "POST":
 
-@app.route("/salvar_alinhamento", methods=["POST"])
-def salvar_alinhamento():
-    coluna1 = request.form.get('email')
+    	ind_rec = request.form.get('ind_rec', None)
+    	recuperacao = request.form.get('recuperacao', None)
 
-    return render_template("report.html")
+    	# Utilizar alinhamento existente
+    	if ind_rec == "1":
+
+    		return redirect(url_for('processamento'))
+
+    	# Editar alinhamento
+    	if ind_rec == "2":
+
+    		return redirect(url_for('alinhamento'))
+
+
+@app.route("/processamento", methods=["GET"])
+def processamento():
+
+
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
