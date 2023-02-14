@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="home w-100 m-auto">        
+      <form action="{{url_for('alinhamento')}}" method="post">
+        <div class="mb-5">
+          <label for="nome_depara" class="form-label">{{ nome_crosswalk }}</label>
+          <input hidden name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="Com qual nome deseja salvar este alinhamento?" value="{{ nome_crosswalk }}">
+        </div>
+
+        {% for key, value in cabecalho_usuario.items() %}
+        <div class="form-group mb-2">
+          <label for="{{ column }}">{{ key }}</label>
+          <select name="{{ value }}" class="form-control" id="{{ value }}">
+            <option value="{{ value }}" selected>{{ value }}</option>
+            {% for elemento_cco in esquema_cco %}
+            <option value="{{ elemento_cco }}">{{ elemento_cco }}</option>
+            {% endfor %}
+            <option value="Off">Não utilizar</option>
+
+          </select>
+        </div>
+        {% endfor %}
+        <button class="w-100 btn btn-sm btn-primary" type="submit">Avançar</button>
+      </form>
+      {% endblock %}

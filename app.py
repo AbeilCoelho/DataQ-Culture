@@ -12,12 +12,14 @@ from fileinput import filename
 import csv
 import os
 import magic
+import json
+import analisador
 
 app = Flask(__name__)
 app.secret_key = "1skrLdKMnX'dZ{0#XEuS+r"
 app.config["UPLOAD_EXTENSIONS"] = ['.csv', '.CSV']
 app.config["UPLOAD_PATH"] = "uploads"
-pasta_alinhamentos = "data\\alinhamentos"
+pasta_dados = "data"
 
 esquema_cco = ['Work Type', 
 'Title', 
@@ -106,7 +108,7 @@ def upload():
 def alinhamento():
     if request.method == "GET":
 
-        dados_alinhamento = pd.read_csv(session["caminho_arquivo"], sep=session["delimitador"], encoding=session["encoding"])
+        dados_alinhamento = pd.read_csv(session["caminho_arquivo"], sep=session["delimitador"], encoding=session["encoding"], nrows=2)
         cabecalho_usuario_lista = dados_alinhamento.columns.tolist()
 
         # Salvar o cabeçalho do arquivo na seção 
@@ -117,7 +119,7 @@ def alinhamento():
         key_cabecalho_usuario.replace(" ", "_")
         
         lista_pretendentes_croswalk = []
-        for file in os.listdir(os.path.join(pasta_alinhamentos)):
+        for file in os.listdir(os.path.join(pasta_dados, "alinhamentos")):
             if file.startswith(key_cabecalho_usuario):
                 lista_pretendentes_croswalk.append(file)
 
@@ -130,8 +132,8 @@ def alinhamento():
                 item = item.replace(".txt", "")
                 lista_pretendentes_croswalk_clean.append(item)
 
-                # Lista de pretendents com caminho completo e nome limpo
-                lista_pretendentes_croswalk = dict(map(lambda i,j : (i,j) , lista_pretendentes_croswalk_clean,lista_pretendentes_croswalk))
+            # Lista de pretendents com caminho completo e nome limpo
+            lista_pretendentes_croswalk = dict(map(lambda i,j : (i,j) , lista_pretendentes_croswalk_clean,lista_pretendentes_croswalk))
         
         cabecalho_usuario = {k: v for v, k in enumerate(cabecalho_usuario_lista)}
         return render_template("alinhamento.html", cabecalho_usuario=cabecalho_usuario, file_name=session['nome_arquivo'], esquema_cco=esquema_cco, lista_pretendentes_croswalk=lista_pretendentes_croswalk)
@@ -150,38 +152,65 @@ def alinhamento():
         crosswalk.pop(0)
 
         # Criar dicionário com cabeçalho antigo e novo
-        crosswalk = dict(map(lambda i,j : (i,j) , session["cabecalho_usuario_lista"],crosswalk))
+        crosswalk = dict(map(lambda i,j : (i,j) , session["cabecalho_usuario_lista"], crosswalk))
         
-        caminho_crosswalk = os.path.join(pasta_alinhamentos, nome_crosswalk)
+        caminho_crosswalk = os.path.join(pasta_dados,"alinhamentos", nome_crosswalk)
         with open(caminho_crosswalk, 'w') as arquivo_crosswalk:
             arquivo_crosswalk.write(json.dumps(crosswalk))
 
-        return render_template("index.html")
+        session["caminho_crosswalk"] = caminho_crosswalk
 
-@app.route("/recuperar_alinhamento", methods=["GET", "POST"])
+        return redirect(url_for('processamento'))
+
+@app.route("/recuperar_alinhamento", methods=["POST"])
 def recuperar_alinhamento():
+    ind_rec = request.form.get('ind_rec', None)
+    recuperacao = request.form.get('recuperacao', None)
+    nome_rec = request.form.get('nome_rec', None)
+    session['nome_rec'] = nome_rec
+
     if request.method == "POST":
 
-    	ind_rec = request.form.get('ind_rec', None)
-    	recuperacao = request.form.get('recuperacao', None)
+        if ind_rec == "2":
+            recuperacao = recuperacao
+            caminho_crosswalk = os.path.join(pasta_dados, "alinhamentos", recuperacao)
 
-    	# Utilizar alinhamento existente
-    	if ind_rec == "1":
+            with open(caminho_crosswalk) as crosswalk_salvo:
+                crosswalk_salvo = crosswalk_salvo.read()
+            crosswalk_salvo = json.loads(crosswalk_salvo)
 
-    		return redirect(url_for('processamento'))
+            return render_template("editar_alinhamento.html", esquema_cco=esquema_cco, cabecalho_usuario=crosswalk_salvo, nome_crosswalk=nome_rec)
 
-    	# Editar alinhamento
-    	if ind_rec == "2":
+        if ind_rec == "3":
+            recuperacao = recuperacao
+            caminho_crosswalk = os.path.join(pasta_dados, "alinhamentos", recuperacao)
+            os.remove(caminho_crosswalk)
 
-    		return redirect(url_for('alinhamento'))
+            return redirect(url_for('alinhamento'))
 
 
-@app.route("/processamento", methods=["GET"])
+@app.route("/processamento", methods=["GET", "POST"])
 def processamento():
 
+    with open(session["caminho_crosswalk"]) as crosswalk_recuperado:
+        crosswalk_recuperado = crosswalk_recuperado.read()
+    crosswalk_recuperado = json.loads(crosswalk_recuperado)
 
-    return render_template("index.html")
+    avaliacao_dados = pd.read_csv(session["caminho_arquivo"], sep=session["delimitador"], encoding=session["encoding"])
+    avaliacao_dados.rename(columns=crosswalk_recuperado, inplace=True)
 
+    # Remover dados não utilizados
+    avaliacao_dados = avaliacao_dados.loc[:, ~avaliacao_dados.columns.str.startswith('Não utilizar')]
+
+    regras_cco = pd.read_excel(os.path.join(pasta_dados, "fontes\\Base_Regex.xlsx"))
+    dimencoes = pd.read_excel(os.path.join(pasta_dados, "fontes\\Dimencoes.xlsx"))
+    controlados = pd.read_excel(os.path.join(pasta_dados, "fontes\\Campos_com_vocabularios_controlados.xlsx"), index_col=0)
+
+    nome_arquivo = session['nome_rec'] + ".xlsx"
+    nome_arquivo = os.path.join(pasta_dados, nome_arquivo)
+
+    return send_file(nome_arquivo, as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(host="192.168.100.38", port=8000, debug=True)
+    #app.run(host="192.168.100.38", port=8000, debug=True)
+    app.run(host="10.150.109.149", port=8000, debug=True)

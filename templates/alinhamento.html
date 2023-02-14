@@ -6,24 +6,32 @@
     <h4 class="alert-heading">Esse arquivo já foi alinhado!</h4>
     {% if lista_pretendentes_croswalk | length > 0 %}
     {% for key, value in lista_pretendentes_croswalk.items() %}
-    <form action="{{url_for('recuperar_alinhamento')}}" method="POST">
+    <form action="{{url_for('processamento')}}" method="POST">
       <label for="{{ key }}" class="form-label">{{ key }}</label>
       <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
       <input hidden id="{{ key }}" name="ind_rec" value="1">
-      <button class="w-100 btn btn-sm btn-primary" type="submit">Utilizar</button></form>
+      <button class="w-100 btn btn-sm btn-primary" type="submit">Aproveitar</button>
+    </form>
 
       <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
         <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
         <input hidden id="{{ key }}" name="ind_rec" value="2">
-        <button class="w-100 btn btn-sm btn-info" type="submit">Editar</button></form>
+        <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
+        <button class="w-100 btn btn-sm btn-info" type="submit">Editar</button>
+      </form>
+      <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
+        <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
+        <input hidden id="{{ key }}" name="ind_rec" value="3">
+        <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
+        <button class="w-100 btn btn-sm btn-warning" type="submit">Excluir</button></form>
         {% endfor %}
         {% endif %}
 
       </div>
-      <form action="{{url_for('alinhamento')}}" method="post">
-        <div class="mb-3">
-          <label for="nome_depara" class="form-label">DESCRIÇÃO</label>
-          <input name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="Com qual nome deseja salvar este alinhamento?">
+      <form action="{{url_for('alinhamento')}}" method="POST">
+        <div class="mb-5">
+          <label for="nome_depara" class="form-label">NOME DO ALINHAMENTO</label>
+          <input required name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="Com qual nome deseja salvar este alinhamento?">
         </div>
         {% for key, value in cabecalho_usuario.items() %}
         <div class="form-group">
@@ -33,11 +41,11 @@
             {% for elemento_cco in esquema_cco %}
             <option value="{{ elemento_cco }}">{{ elemento_cco }}</option>
             {% endfor %}
-            <option value="Off-{{ key }}">Não utilizar</option>
+            <option value="Não utilizar">Não utilizar</option>
 
           </select>
         </div>
         {% endfor %}
-        <input type="submit" value="Salvar">
+        <button class="w-100 btn btn-sm btn-primary" type="submit">Avançar</button>
       </form>
       {% endblock %}
