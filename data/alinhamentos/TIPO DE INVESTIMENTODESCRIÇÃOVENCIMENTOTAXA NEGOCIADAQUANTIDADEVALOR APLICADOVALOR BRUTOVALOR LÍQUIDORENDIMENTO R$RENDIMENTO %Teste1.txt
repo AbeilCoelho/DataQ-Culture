@@ -1,0 +1,1 @@
+{"DESCRI\u00c7\u00c3O": "Title", "QUANTIDADE": "Measurements_Largura", "RENDIMENTO %": "Off-RENDIMENTO %", "RENDIMENTO R$": "Materials and Techniques", "TAXA NEGOCIADA": "Measurements", "TIPO DE INVESTIMENTO": "Work Type", "VALOR APLICADO": "Measurements_espessura", "VALOR BRUTO": "Measurements_espessura", "VALOR L\u00cdQUIDO": "Measurements_peso", "VENCIMENTO": "Measurements"}

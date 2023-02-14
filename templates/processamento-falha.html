@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="home w-100 m-auto">
+    <p style="color:red;">Erro ao ler o arquivo CSV: '{{ nome_arquivo }}''</p>
+
+    <p>Você será redirecionado em 6 segundos...</p>
+    <script>
+        var timer = setTimeout(function() {
+            window.location='{{ url_for('index') }}'
+        }, 6000);
+    </script>
+    <br>
+    <p>Caso não seja redirecionado, clique <a href="{{ url_for('index') }}">aqui</a></p>
+{% endblock %}
