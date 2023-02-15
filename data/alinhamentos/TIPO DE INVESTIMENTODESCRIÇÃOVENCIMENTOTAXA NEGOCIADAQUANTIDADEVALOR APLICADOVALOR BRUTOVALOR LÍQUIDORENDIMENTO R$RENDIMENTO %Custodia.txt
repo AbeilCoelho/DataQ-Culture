@@ -1,1 +1,0 @@
-{"TIPO DE INVESTIMENTO": "Work Type", "DESCRI\u00c7\u00c3O": "Title", "VENCIMENTO": "Creator", "TAXA NEGOCIADA": "Measurements", "QUANTIDADE": "Measurements_Altura", "VALOR APLICADO": "Materials and Techniques", "VALOR BRUTO": "Physical Description", "VALOR L\u00cdQUIDO": "Date", "RENDIMENTO R$": "Class", "RENDIMENTO %": "N\u00e3o utilizar"}

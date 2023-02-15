@@ -15,6 +15,12 @@
   <link rel="mask-icon" href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}" color="#000000">
   <meta name="msapplication-TileColor" content="#ffffff">
   <meta name="theme-color" content="#ffffff">
+  <script>
+        function showDiv() {
+            document.getElementById('showme').style.display = "block";
+            document.getElementsByClassName('blur')[0].style.filter = "blur(8px)";
+        }
+  </script>
 
   <style>
     .bd-placeholder-img {
@@ -73,8 +79,14 @@
 </head>
 
 <body class="text-center">
+    <div id="showme" class="container fixed-top h-100  justify-content-center" style="display:none">
+      <img src="{{ url_for('static', filename='loading.gif') }}" class="img-responsive" style="margin: 0 auto;" alt="Carregando">
+      <p>Aguarde um instante enquando os dados são avaliados...</p>
+    </div>
     {% block content %} {% endblock %}
     <p class="mt-5 mb-3 text-muted"><a class="text-reset text-decoration-none" href="https://www.linkedin.com/in/abeil/">Desenvolvido por Abeil Coelho Jr.</a></p>
   </main>
+
 </body>
+
 </html>

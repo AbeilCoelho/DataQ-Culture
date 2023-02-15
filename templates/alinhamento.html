@@ -1,31 +1,31 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<main class="home w-100 m-auto">        
-  <div class="alert alert-primary" role="alert">
-    <h4 class="alert-heading">Esse arquivo já foi alinhado!</h4>
-    {% if lista_pretendentes_croswalk | length > 0 %}
-    {% for key, value in lista_pretendentes_croswalk.items() %}
-    <form action="{{url_for('processamento')}}" method="POST">
-      <label for="{{ key }}" class="form-label">{{ key }}</label>
-      <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
-      <input hidden id="{{ key }}" name="ind_rec" value="1">
-      <button class="w-100 btn btn-sm btn-primary" type="submit">Aproveitar</button>
-    </form>
+<main class="home w-100 m-auto blur">        
+    {% if lista_pretendentes_crosswalk | length > 0 %}
+      <div class="alert alert-primary" role="alert">
+      <h4 class="alert-heading">Esse arquivo já foi alinhado!</h4>
+      {% for key, value in lista_pretendentes_crosswalk.items() %}
+        <form action="{{url_for('processamento')}}" method="POST">
+          <label for="{{ key }}" class="form-label">{{ key }}</label>
+          <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
+          <input hidden id="{{ key }}" name="ind_rec" value="1">
+          <button class="w-100 btn btn-sm btn-primary" type="submit" onclick="showDiv()">Aproveitar</button>
+        </form>
 
-      <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
-        <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
-        <input hidden id="{{ key }}" name="ind_rec" value="2">
-        <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
-        <button class="w-100 btn btn-sm btn-info" type="submit">Editar</button>
-      </form>
-      <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
-        <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
-        <input hidden id="{{ key }}" name="ind_rec" value="3">
-        <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
-        <button class="w-100 btn btn-sm btn-warning" type="submit">Excluir</button></form>
-        {% endfor %}
-        {% endif %}
+          <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
+            <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
+            <input hidden id="{{ key }}" name="ind_rec" value="2">
+            <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
+            <button class="w-100 btn btn-sm btn-info" type="submit">Editar</button>
+          </form>
+          <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
+            <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
+            <input hidden id="{{ key }}" name="ind_rec" value="3">
+            <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
+            <button class="w-100 btn btn-sm btn-warning" type="submit">Excluir</button></form>
+      {% endfor %}
+    {% endif %}
 
       </div>
       <form action="{{url_for('alinhamento')}}" method="POST">
@@ -34,8 +34,8 @@
           <input required name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="Com qual nome deseja salvar este alinhamento?">
         </div>
         {% for key, value in cabecalho_usuario.items() %}
-        <div class="form-group">
-          <label for="{{ column }}">{{ key }}</label>
+        <div class="form-group mb-5">
+          <label class="form-label" for="{{ column }}">{{ key }}</label>
           <select name="{{ value }}" class="form-control" id="{{ value }}">
             <option value="Off" selected disabled>Selecione</option>
             {% for elemento_cco in esquema_cco %}
@@ -44,8 +44,11 @@
             <option value="Não utilizar">Não utilizar</option>
 
           </select>
+          <input class="form-check-input" name="vocabulario_controlado_{{ value }}" type="checkbox" value="{{ key }}" id="flexCheckDefault">
+          <label class="form-check-label" for="flexCheckDefault">Usa vocabulário controlado</label>
         </div>
+
         {% endfor %}
-        <button class="w-100 btn btn-sm btn-primary" type="submit">Avançar</button>
+        <button class="w-100 btn btn-sm btn-primary" type="submit" onclick="showDiv()">Avançar</button>
       </form>
       {% endblock %}
