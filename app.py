@@ -9,6 +9,8 @@ import os
 import json
 #from fileinput import filename
 import seaborn as sns
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, session, send_file, url_for, request, abort, redirect
@@ -320,6 +322,7 @@ def processamento():
 
     nome_arquivo = session["nome_arquivo"] + ".xlsx"
     nome_arquivo = os.path.join(PASTA_DADOS, nome_arquivo)
+    session["arquivo_download"] = nome_arquivo
     #session['nome_arquivo'] = nome_arquivo
 
     resultados_preliminares.to_excel(nome_arquivo)
@@ -354,7 +357,7 @@ def processamento():
 @app.route("/download", methods=["GET"])
 def download():
 
-    arquivo = session['nome_arquivo']
+    arquivo = session["arquivo_download"]
 
     return send_file(arquivo, as_attachment=True)
 
