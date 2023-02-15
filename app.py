@@ -327,5 +327,5 @@ def download():
     return send_file(arquivo, as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(host="192.168.100.38", port=8000, debug=True)
+    app.run(host="data-q-culture.vercel.app", port=8000, debug=True)
     #app.run(host="10.150.109.149", port=8000, debug=True)
