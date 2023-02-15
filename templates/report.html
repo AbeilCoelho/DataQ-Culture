@@ -2,9 +2,11 @@
 
 {% block content %}
     <main class="home w-100 m-auto blur">
-    <img class="mb-4" src="{{ imagem }}" alt="mapa de calor" width="300" height="300">
-    <p>Baixar relatório detalhado, clique no botão abaixo:</p>
-    <a type="button" href="{{ url_for('download') }}" class="btn btn-info">Baixar relatório</a>
-    <a type="button" href="{{ url_for('index') }}" class="btn btn-primary">Voltar ao início</a>
+    	<img class="mb-4" src="{{ url_for('static', filename='globe.png') }}" alt="Logo DataQ" width="200" height="200 ">
+    	<h2>Resultados obtivos</h2>
+    	<img class="mb-4" src="{{ url_for('static', filename='imagem.png') }}" alt="mapa de calor">
+    	<p>Baixar relatório detalhado, clique no botão abaixo:</p>
+    	<a type="button" href="{{ url_for('download') }}" class="btn btn-info">Baixar relatório</a>
+    	<a type="button" href="{{ url_for('index') }}" class="btn btn-primary">Voltar ao início</a>
 
 {% endblock %}

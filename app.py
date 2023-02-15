@@ -1,30 +1,31 @@
-# Autores: Abeil Coelho Júnior
-# Data de criação: 13/02/2023
-# Descrição: Projeto de mestrado
-# Versão: 1
-# Data de modificação: 14/02/2023
+""" Autor: Abeil Coelho Júnior
+Data de criação: 13/02/2023
+Descrição: Projeto de mestrado
+Versão: 1
+Data de modificação: 15/02/2023 """
 
-from flask import *
-from werkzeug.utils import secure_filename
-
-import pandas as pd
-from fileinput import filename
 import csv
 import os
-import magic
 import json
+#from fileinput import filename
+import seaborn as sns
+import matplotlib.pyplot as plt
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template, session, send_file, url_for, request, abort, redirect
+import pandas as pd
+import magic
 from analisador import verificador
 
 app = Flask(__name__)
 app.secret_key = "1skrLdKMnX'dZ{0#XEuS+r"
 app.config["UPLOAD_EXTENSIONS"] = ['.csv', '.CSV']
 app.config["UPLOAD_PATH"] = "uploads"
-pasta_dados = "data"
-arquivo_crosswalks = os.path.join(pasta_dados, "alinhamentos\\alinhamentos.parquet")
+PASTA_DADOS = "data"
+arquivo_crosswalks = os.path.join(PASTA_DADOS, "alinhamentos\\alinhamentos.parquet")
 
-esquema_cco = ['Work Type', 
-'Title', 
-'Creator', 
+esquema_cco = ['Work Type',
+'Title',
+'Creator',
 'Measurements',
 'Measurements_Altura',
 'Measurements_Largura',
@@ -32,15 +33,15 @@ esquema_cco = ['Work Type',
 'Measurements_espessura',
 'Measurements_diametro',
 'Measurements_peso',
-'Materials and Techniques', 
-'Physical Description', 
-'Date', 
-'Creation Location', 
-'Class', 
-'Description', 
-'Other Descriptive Notes', 
-'Related Works', 
-'Inscription', 
+'Materials and Techniques',
+'Physical Description',
+'Date',
+'Creation Location',
+'Class',
+'Description',
+'Other Descriptive Notes',
+'Related Works',
+'Inscription',
 'Location']
 
 try:
@@ -54,13 +55,12 @@ except:
 def index():
     return render_template("index.html")
 
-
 @app.route("/upload", methods=["POST", "GET"])
 def upload():
     if request.method == "GET":
         return render_template("upload.html")
 
-    if request.method == "POST":  
+    if request.method == "POST":
         arquivo_enviado_pelo_usuario = request.files["file"]
 
         # Verificar se o conteúdo que o usuário está subindo é seguro
@@ -76,13 +76,12 @@ def upload():
 
         # Salvando arquivo do usuário
         arquivo_enviado_pelo_usuario.save(caminho_arquivo_usuario)
-        
 
         # Detectar encoding e delimitador do arquivo do usuário
         try:
             blob = open(caminho_arquivo_usuario, 'rb').read()
-            m = magic.Magic(mime_encoding=True)
-            encoding = m.from_buffer(blob)
+            magic_mime = magic.Magic(mime_encoding=True)
+            encoding = magic_mime.from_buffer(blob)
             session["encoding"] = encoding
             #print("encoding:", encoding)
 
@@ -112,7 +111,7 @@ def alinhamento():
         dados_alinhamento = dados_alinhamento.loc[:,~dados_alinhamento.columns.str.match("Unnamed")]
         cabecalho_usuario_lista = dados_alinhamento.columns.tolist()
 
-        # Salvar o cabeçalho do arquivo na seção 
+        # Salvar o cabeçalho do arquivo na seção
         session["cabecalho_usuario_lista"] = cabecalho_usuario_lista
 
         cabecalho_usuario = {k: v for v, k in enumerate(cabecalho_usuario_lista)}
@@ -120,24 +119,23 @@ def alinhamento():
         # Verificar se crosswalk já existe
         key_cabecalho_usuario = ''.join(cabecalho_usuario_lista)
         key_cabecalho_usuario.replace(" ", "_")
-        
-        
+
         try:
             lista_pretendentes_crosswalk = pd.read_parquet(arquivo_crosswalks)
             lista_pretendentes_crosswalk = lista_pretendentes_crosswalk.query("colunas == '{}'".format(key_cabecalho_usuario))
             lista_pretendentes_crosswalk = lista_pretendentes_crosswalk.set_index('nome').to_dict()['id']
-        
+
         except:
             lista_pretendentes_crosswalk = []
-        
+
 
         return render_template("alinhamento.html", cabecalho_usuario=cabecalho_usuario, file_name=session['nome_arquivo'], esquema_cco=esquema_cco, lista_pretendentes_crosswalk=lista_pretendentes_crosswalk)
-    
+
     if request.method == "POST":
         novo_crosswalk = request.form.items()
         crosswalk = []
         crosswalk_vocabulario = []
-        
+
         for indice, valor in novo_crosswalk:
             if "vocabulario_controlado" in indice:
                 crosswalk_vocabulario.append(valor)
@@ -145,13 +143,13 @@ def alinhamento():
                 crosswalk.append(valor)
 
 
-        
+
         key_cabecalho_usuario = ''.join(session["cabecalho_usuario_lista"])
         key_cabecalho_usuario.replace(" ", "_")
 
         nome_crosswalk = crosswalk[0]
 
-        
+
         # Remover crosswalk com mesmo nome e colunas
         croswalks_salvos = pd.read_parquet(arquivo_crosswalks)
 
@@ -176,14 +174,14 @@ def alinhamento():
         print("crosswalk_vocabulario_antes:", crosswalk_vocabulario)
         crosswalk_vocabulario = list(map(lambda x: crosswalk.get(x, x), crosswalk_vocabulario))
         print("crosswalk_vocabulario_depois:", crosswalk_vocabulario)
-        
+
         # Salvar alinhamento com nome de colunas antes e depois
-        caminho_crosswalk = os.path.join(pasta_dados,"alinhamentos", str(novo_id))
+        caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", str(novo_id))
         with open(caminho_crosswalk, 'w') as arquivo_crosswalk:
             arquivo_crosswalk.write(json.dumps(crosswalk))
 
         # Salvar colunas com indicação de usu de vocabulário controlado
-        caminho_crosswalk_vocabulario = os.path.join(pasta_dados,"alinhamentos", str(novo_id)+"_vocabulario" )
+        caminho_crosswalk_vocabulario = os.path.join(PASTA_DADOS,"alinhamentos", str(novo_id)+"_vocabulario" )
         crosswalk_vocabulario = pd.DataFrame(crosswalk_vocabulario, columns = ['Campos_Ajutados'])
         crosswalk_vocabulario.to_csv(caminho_crosswalk_vocabulario)
 
@@ -196,19 +194,19 @@ def recuperar_alinhamento():
     if request.method == "POST":
         ind_rec = request.form.get('ind_rec', None)
         recuperacao = request.form.get('recuperacao', None)
-        nome_rec = request.form.get('nome_rec', None)    
+        nome_rec = request.form.get('nome_rec', None)
 
         if ind_rec == "2":
-            recuperacao = recuperacao
 
-            caminho_crosswalk = os.path.join(pasta_dados, "alinhamentos", recuperacao)
+
+            caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
             with open(caminho_crosswalk) as crosswalk_salvo:
                 crosswalk_salvo = crosswalk_salvo.read()
             print("crosswalk_salvo:", crosswalk_salvo)
             crosswalk_salvo = json.loads(crosswalk_salvo)
 
             recuperacao = recuperacao + "_vocabulario"
-            recuperacao = os.path.join(pasta_dados, "alinhamentos", recuperacao)
+            recuperacao = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
             caminho_crosswalk_vocabulario = pd.read_csv(recuperacao, index_col=0)
             caminho_crosswalk_vocabulario = caminho_crosswalk_vocabulario['Campos_Ajutados'].tolist()
 
@@ -216,13 +214,13 @@ def recuperar_alinhamento():
 
         # Remover alinhamento
         if ind_rec == "3":
-            recuperacao = recuperacao
+
             # Exluir arquivo
-            caminho_crosswalk = os.path.join(pasta_dados, "alinhamentos", recuperacao)
+            caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
             os.remove(caminho_crosswalk)
-            
+
             recuperacao = recuperacao + "_vocabulario"
-            caminho_crosswalk = os.path.join(pasta_dados, "alinhamentos", recuperacao)
+            caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
             os.remove(caminho_crosswalk)
 
             # Remove registro
@@ -235,16 +233,26 @@ def recuperar_alinhamento():
 
 @app.route("/processamento", methods=["GET", "POST"])
 def processamento():
+
+    try:
+        print(session["caminho_crosswalk"])
+    except:
+        recuperacao = request.form.get('recuperacao', None)
+        caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", str(recuperacao))
+        session["caminho_crosswalk"] = caminho_crosswalk
+
     # Carregando dados para processamento
-    regras_cco = pd.read_excel(os.path.join(pasta_dados, "fontes\\Base_Regex.xlsx"))
-    dimencoes = pd.read_excel(os.path.join(pasta_dados, "fontes\\Dimencoes.xlsx"))
+    regras_cco = pd.read_excel(os.path.join(PASTA_DADOS, "fontes\\Base_Regex.xlsx"))
+    dimencoes = pd.read_excel(os.path.join(PASTA_DADOS, "fontes\\Dimencoes.xlsx"))
+
+
 
     # Carregando arquivo com o crosswalk
     with open(session["caminho_crosswalk"]) as crosswalk_recuperado:
         crosswalk_recuperado = crosswalk_recuperado.read()
     crosswalk_recuperado = json.loads(crosswalk_recuperado)
 
-    id = session["caminho_crosswalk"] + "_vocabulario"
+    acervo_id = session["caminho_crosswalk"] + "_vocabulario"
 
     cco_crosswalked = list(crosswalk_recuperado.values())
     cco_crosswalked = list(set(cco_crosswalked))
@@ -285,9 +293,9 @@ def processamento():
 
             # Loop para cada registro presenta na coluna do metadado
             for index_dado, row_dado in coluna_foco.iterrows():
-                dado_descricional = row_dado[0]            
+                dado_descricional = row_dado[0]
 
-                avaliacao = verificador(regex, dado_descricional, ind_negativo, tipo, nome_regra, session["nome_arquivo"], metadado, id)
+                avaliacao = verificador(regex, dado_descricional, ind_negativo, tipo, nome_regra, session["nome_arquivo"], metadado, acervo_id)
                 avaliacoes.append(avaliacao)
 
             resultado_geral = pd.DataFrame({'Avaliacao': avaliacoes, "Dado": coluna_foco["foco"], "Colecao": session["nome_arquivo"], "Campo_Metadado": metadado, "Regra": nome_regra, "Regex": regex, "Total": tamanho_total})
@@ -311,13 +319,37 @@ def processamento():
     resultados_preliminares = resultados_preliminares.sort_values(by=["Dimensão", "Campo_Metadado"]).reset_index(drop=True)
 
     nome_arquivo = session["nome_arquivo"] + ".xlsx"
-    nome_arquivo = os.path.join(pasta_dados, nome_arquivo)
-    session['nome_arquivo'] = nome_arquivo
+    nome_arquivo = os.path.join(PASTA_DADOS, nome_arquivo)
+    #session['nome_arquivo'] = nome_arquivo
 
     resultados_preliminares.to_excel(nome_arquivo)
-    imagem = 2
 
-    return render_template("report.html", imagem=imagem)
+    adequacao_por_regras = (resultados_preliminares.groupby(["Colecao", "Dimensão", "Campo_Metadado", "Regra"]).agg(
+    zeros=("0", "sum"),
+    ums=("1", "sum")).reset_index())
+
+    adequacao_por_regras_clean = adequacao_por_regras[["Colecao", "Dimensão", "Campo_Metadado", "Regra", "ums", "zeros"]]
+
+    adequacao_por_dimensao = (adequacao_por_regras_clean.groupby(["Colecao", "Dimensão"]).agg(
+        zeros=("zeros", "sum"),
+        ums=("ums", "sum")).reset_index())
+
+    adequacao_por_dimensao["Total"] = adequacao_por_dimensao["zeros"] + adequacao_por_dimensao["ums"]
+    adequacao_por_dimensao["Adequacao"] = (adequacao_por_dimensao["ums"]/adequacao_por_dimensao["Total"]) * 100
+
+    adequacao_por_dimensao = adequacao_por_dimensao[["Colecao", "Dimensão", "Adequacao"]]
+    adequacao_por_dimensao = adequacao_por_dimensao.round({'Adequacao': 0})
+    adequacao_por_dimensao = adequacao_por_dimensao.sort_values(by=["Dimensão", "Colecao"])
+    sns.set(rc={'figure.figsize':(5,1)})
+    adequacao_por_dimensao = adequacao_por_dimensao.pivot(index='Colecao', columns='Dimensão', values='Adequacao')
+    sns.heatmap(adequacao_por_dimensao, cmap="Blues", annot=True, fmt="g", linewidths=.2, annot_kws={"fontsize":12}).set(ylabel=None)
+    plt.tick_params(axis='y', which='major', labelsize=9, direction="in")
+    nome_imagem = "imagem.png"
+    caminho_imagem = os.path.join("static", nome_imagem)
+    plt.savefig(caminho_imagem, bbox_inches="tight", transparent=True) 
+
+
+    return render_template("report.html", imagem=nome_imagem)
 
 @app.route("/download", methods=["GET"])
 def download():
@@ -326,3 +358,6 @@ def download():
 
     return send_file(arquivo, as_attachment=True)
 
+if __name__ == "__main__":
+    #app.run(host="data-q-culture.vercel.app", port=8000, debug=True)
+    app.run(host="10.150.109.25", port=8000, debug=True)
