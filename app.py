@@ -333,6 +333,17 @@ def processamento():
 
     adequacao_por_regras_clean = adequacao_por_regras[["Colecao", "Dimensão", "Campo_Metadado", "Regra", "ums", "zeros"]]
 
+    # Adequação total
+    adequacao_total = (adequacao_por_regras_clean.groupby(["Colecao"]).agg(
+        zeros=("zeros", "sum"),
+        ums=("ums", "sum")).reset_index())
+
+    adequacao_total["Total"] = adequacao_total["zeros"] + adequacao_total["ums"]
+    adequacao_total["Adequacao"] = (adequacao_total["ums"]/adequacao_total["Total"]) * 100
+    session["adequacao_total"] = adequacao_total["Adequacao"].astype('int').to_list()[0]
+
+
+    # Adequação por dimensão
     adequacao_por_dimensao = (adequacao_por_regras_clean.groupby(["Colecao", "Dimensão"]).agg(
         zeros=("zeros", "sum"),
         ums=("ums", "sum")).reset_index())
@@ -340,27 +351,83 @@ def processamento():
     adequacao_por_dimensao["Total"] = adequacao_por_dimensao["zeros"] + adequacao_por_dimensao["ums"]
     adequacao_por_dimensao["Adequacao"] = (adequacao_por_dimensao["ums"]/adequacao_por_dimensao["Total"]) * 100
 
-    adequacao_por_dimensao = adequacao_por_dimensao[["Colecao", "Dimensão", "Adequacao"]]
-    adequacao_por_dimensao = adequacao_por_dimensao.round({'Adequacao': 0})
-    adequacao_por_dimensao = adequacao_por_dimensao.sort_values(by=["Dimensão", "Colecao"])
-    sns.set(rc={'figure.figsize':(5,1)})
-    adequacao_por_dimensao = adequacao_por_dimensao.pivot(index='Colecao', columns='Dimensão', values='Adequacao')
-    sns.heatmap(adequacao_por_dimensao, cmap="Blues", annot=True, fmt="g", linewidths=.2, annot_kws={"fontsize":12}).set(ylabel=None)
-    plt.tick_params(axis='y', which='major', labelsize=9, direction="in")
-    nome_imagem = "imagem.png"
-    caminho_imagem = os.path.join("static", nome_imagem)
-    plt.savefig(caminho_imagem, bbox_inches="tight", transparent=True) 
+    adequacao_por_dimensao = adequacao_por_dimensao[["Dimensão", "Adequacao"]]
+    adequacao_por_dimensao = adequacao_por_dimensao.sort_values(by=["Dimensão"])
+
+    session["adequacao_por_dimensao_dimencoes"] = adequacao_por_dimensao["Dimensão"].to_list()
+    session["adequacao_por_dimensao_adequacao"] = adequacao_por_dimensao["Adequacao"].astype('int').to_list()
+
+    # Detalhes 3 piores dimensões
+    adequacao_por_dimensao = adequacao_por_dimensao.sort_values(by=["Adequacao"])
+    piores_dimensoes = adequacao_por_dimensao["Dimensão"].to_list()[:3]
+
+    # 1º Pior
+    pior_dimensao_1 = piores_dimensoes[0]
+    session["pior_dimensao_1"] = pior_dimensao_1
+    pior_dimensao_1 = adequacao_por_regras_clean.query("Dimensão == '{}'".format(pior_dimensao_1))
+
+    adequacao_por_dimensao1 = (pior_dimensao_1.groupby(["Colecao", "Dimensão", "Campo_Metadado"]).agg(
+        zeros=("zeros", "sum"),
+        ums=("ums", "sum")).reset_index())
+
+    adequacao_por_dimensao1["Total"] = adequacao_por_dimensao1["zeros"] + adequacao_por_dimensao1["ums"]
+    adequacao_por_dimensao1["Adequacao"] = (adequacao_por_dimensao1["ums"]/adequacao_por_dimensao1["Total"]) * 100
+
+    session["adequacao_por_dimensao_dimencoes1"] = adequacao_por_dimensao1["Campo_Metadado"].to_list()
+    session["adequacao_por_dimensao_adequacao1"] = adequacao_por_dimensao1["Adequacao"].astype('int').to_list()
+
+    # 2º Pior
+    pior_dimensao_2 = piores_dimensoes[1]
+    session["pior_dimensao_2"] = pior_dimensao_2
+    pior_dimensao_2 = adequacao_por_regras_clean.query("Dimensão == '{}'".format(pior_dimensao_2))
+
+    adequacao_por_dimensao2 = (pior_dimensao_2.groupby(["Colecao", "Dimensão", "Campo_Metadado"]).agg(
+        zeros=("zeros", "sum"),
+        ums=("ums", "sum")).reset_index())
+
+    adequacao_por_dimensao2["Total"] = adequacao_por_dimensao2["zeros"] + adequacao_por_dimensao2["ums"]
+    adequacao_por_dimensao2["Adequacao"] = (adequacao_por_dimensao2["ums"]/adequacao_por_dimensao2["Total"]) * 100
+
+    session["adequacao_por_dimensao_dimencoes2"] = adequacao_por_dimensao2["Campo_Metadado"].to_list()
+    session["adequacao_por_dimensao_adequacao2"] = adequacao_por_dimensao2["Adequacao"].astype('int').to_list()
 
 
-    return render_template("report.html", imagem=nome_imagem)
+
+
+
+    
+
+
+    # Adequação por campo
+
+
+    return redirect(url_for('relatorio'))
+    #return render_template("report.html", imagem=nome_imagem)
+
+
+@app.route("/relatorio", methods=["GET"])
+def relatorio():
+
+	#session.clear()
+
+	return render_template("report.html", 
+		adequacao_total=session["adequacao_total"], 
+		adequacao_por_dimensao_adequacao=session["adequacao_por_dimensao_adequacao"],
+		adequacao_por_dimensao_dimencoes=session["adequacao_por_dimensao_dimencoes"],
+		pior_dimensao_1=session["pior_dimensao_1"],
+		adequacao_por_dimensao_dimencoes1=session["adequacao_por_dimensao_dimencoes1"],
+		adequacao_por_dimensao_adequacao1=session["adequacao_por_dimensao_adequacao1"],
+		pior_dimensao_2=session["pior_dimensao_2"],
+		adequacao_por_dimensao_dimencoes2=session["adequacao_por_dimensao_dimencoes2"],
+		adequacao_por_dimensao_adequacao2=session["adequacao_por_dimensao_adequacao2"])
 
 @app.route("/download", methods=["GET"])
 def download():
 
     arquivo = session["arquivo_download"]
-
+    #session.clear()
     return send_file(arquivo, as_attachment=True)
 
 if __name__ == "__main__":
     #app.run(host="data-q-culture.vercel.app", port=8000, debug=True)
-    app.run(host="10.150.109.25", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)

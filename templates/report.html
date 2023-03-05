@@ -3,10 +3,112 @@
 {% block content %}
     <main class="home w-100 m-auto blur">
     	<img class="mb-4" src="{{ url_for('static', filename='globe.png') }}" alt="Logo DataQ" width="200" height="200 ">
-    	<h2>Resultados obtivos</h2>
-    	<img class="mb-4" src="{{ url_for('static', filename='imagem.png') }}" alt="mapa de calor">
+    	<h2>Resultados obtivos</h2></br>
+    	<h4>Adequação total <b>{{ adequacao_total }}</b> de 100</h4> 
+    	</br>
+    	<h4>Adequação por dimensão CCO</h4>
+	    <div>
+	    	<canvas id="porDimensao"></canvas>
+		</div></br>
+		<p>Veja abaixo detalhes das piores dimensões.</p><br> 
+
+		<h3>Detalhes da pontuação da dimensão<br>{{ pior_dimensao_1 }}</h3>
+
+		{% if adequacao_por_dimensao_dimencoes1|length > 1 %}
+		    <div>
+		    	<canvas id="porDimensao1"></canvas>
+			</div>
+		{% else %}
+			<p>O elemento <b>{{ adequacao_por_dimensao_dimencoes1[0] }}</b> obteve a adequação de <b>{{ adequacao_por_dimensao_adequacao1[0] }}%</b>.</p>
+		{% endif %}<br>
+
+		<h3>Detalhes da pontuação da dimensão<br>{{ pior_dimensao_2 }}</h3>
+		{% if adequacao_por_dimensao_dimencoes2|length > 1 %}
+		    <div>
+		    	<canvas id="porDimensao2"></canvas>
+			</div>
+		{% else %}
+			<p>O elemento <b>{{ adequacao_por_dimensao_dimencoes2[0] }}</b> obteve a adequação de <b>{{ adequacao_por_dimensao_adequacao2[0] }}%</b>.</p>
+		{% endif %}<br>
+
     	<p>Baixar relatório detalhado, clique no botão abaixo:</p>
     	<a type="button" href="{{ url_for('download') }}" class="btn btn-info">Baixar relatório</a>
     	<a type="button" href="{{ url_for('index') }}" class="btn btn-primary">Voltar ao início</a>
+
+    	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+
+    	<script>
+		  const ctx = document.getElementById('porDimensao');
+
+		  new Chart(ctx, {
+		    type: 'bar',
+		    data: {
+		      labels: {{ adequacao_por_dimensao_dimencoes | safe }},
+		      datasets: [{
+		        label: '% de adequação',
+		        data: {{ adequacao_por_dimensao_adequacao }},
+		        borderWidth: 1
+		      }]
+		    },
+		    plugins: [ChartDataLabels],
+		    options: {
+		      scales: {
+		        y: {
+		          beginAtZero: true
+		        }
+		      }
+		    }
+		  });
+		</script>
+
+		<script>
+		  const ctx = document.getElementById('porDimensao1');
+
+		  new Chart(ctx, {
+		    type: 'bar',
+		    data: {
+		      labels: {{ adequacao_por_dimensao_dimencoes1 | safe }},
+		      datasets: [{
+		        label: '% de adequação',
+		        data: {{ adequacao_por_dimensao_adequacao1 }},
+		        borderWidth: 1
+		      }]
+		    },
+		    plugins: [ChartDataLabels],
+		    options: {
+		      scales: {
+		        y: {
+		          beginAtZero: true
+		        }
+		      }
+		    }
+		  });
+		</script>
+
+		<script>
+		  const ctx = document.getElementById('porDimensao2');
+
+		  new Chart(ctx, {
+		    type: 'bar',
+		    data: {
+		      labels: {{ adequacao_por_dimensao_dimencoes2 | safe }},
+		      datasets: [{
+		        label: '% de adequação',
+		        data: {{ adequacao_por_dimensao_adequacao2 }},
+		        borderWidth: 1
+		      }]
+		    },
+		    plugins: [ChartDataLabels],
+		    options: {
+		      scales: {
+		        y: {
+		          beginAtZero: true
+		        }
+		      }
+		    }
+		  });
+		</script>
 
 {% endblock %}

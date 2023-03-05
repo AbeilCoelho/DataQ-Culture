@@ -30,12 +30,12 @@
       </div>
       <form action="{{url_for('alinhamento')}}" method="POST">
         <div class="mb-5">
-          <label for="nome_depara" class="form-label">NOME DO ALINHAMENTO</label>
+          <label for="nome_depara" class="form-label font-weight-bold"><b>NOME DO ALINHAMENTO</b></label>
           <input required name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="Com qual nome deseja salvar este alinhamento?">
         </div>
         {% for key, value in cabecalho_usuario.items() %}
         <div class="form-group mb-5">
-          <label class="form-label" for="{{ column }}">{{ key }}</label>
+          <label class="form-label font-weight-bold" for="{{ column }}"><b>{{ key }}</b></label>
           <select name="{{ value }}" class="form-control" id="{{ value }}">
             <option value="Off" selected disabled>Selecione</option>
             {% for elemento_cco in esquema_cco %}

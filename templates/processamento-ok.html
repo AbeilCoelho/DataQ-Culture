@@ -2,7 +2,7 @@
 
 {% block content %}
 <main class="home w-100 m-auto">
-    <p style="color:green;">O arquivo '{{ nome_arquivo }}'' recebido com sucesso!</p>
+    <p style="color:green;">O arquivo "{{ nome_arquivo | safe}}" recebido com sucesso!</p>
     <p><b>Delimitador:</b> '{{ delimitador }}'. <b>Encoding:</b> '{{ encoding }}'.</p>
     <p>Você será redirecionado em 2 segundos...</p>
     <script>
