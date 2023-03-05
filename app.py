@@ -46,6 +46,7 @@ esquema_cco = ['Work Type',
 'Inscription',
 'Location']
 
+
 try:
     alinhamentos = pd.read_parquet(arquivo_crosswalks)
 except:
@@ -72,36 +73,44 @@ def upload():
             if extensao_arquivo not in app.config["UPLOAD_EXTENSIONS"]:
                 abort(400)
 
-        caminho_arquivo_usuario= os.path.join(app.config["UPLOAD_PATH"], nome_arquivo_do_usuario)
+        caminho_arquivo_usuario = os.path.join(app.config["UPLOAD_PATH"], nome_arquivo_do_usuario)
         session["caminho_arquivo"] = caminho_arquivo_usuario
         session["nome_arquivo"] = nome_arquivo_do_usuario
 
         # Salvando arquivo do usuário
         arquivo_enviado_pelo_usuario.save(caminho_arquivo_usuario)
 
+
+
         # Detectar encoding e delimitador do arquivo do usuário
         try:
-            blob = open(caminho_arquivo_usuario, 'rb').read()
+            blob = open(session["caminho_arquivo"], 'rb').read()
             magic_mime = magic.Magic(mime_encoding=True)
             encoding = magic_mime.from_buffer(blob)
             session["encoding"] = encoding
-            #print("encoding:", encoding)
+            # print("encoding:", encoding)
+
 
             sniffer = csv.Sniffer()
-            with open(caminho_arquivo_usuario, encoding=encoding) as verificar_delimitador:
+            with open(session["caminho_arquivo"], encoding=encoding) as verificar_delimitador:
                 try:
-                    delimitador = sniffer.sniff(verificar_delimitador.read(1240)).delimiter
+                	# Melhorar essa parte
+                    try:
+                    	delimitador = sniffer.sniff(verificar_delimitador.read(1240)).delimiter
+                    except:
+                    	delimitador = ";"
+                    print("delimitador")
                     session["delimitador"] = delimitador
-                    #print("delimitador:", delimitador)
+                    print("delimitador:", delimitador)
                 except csv.Error:
-                    os.remove(caminho_arquivo_usuario)
+                    #os.remove(session["caminho_arquivo"])
                     abort(400)
                     #return render_template("processamento-falha.html", nome_arquivo=nome_arquivo_do_usuario)
 
-            return render_template("processamento-ok.html", nome_arquivo=nome_arquivo_do_usuario, encoding=encoding, delimitador=delimitador)
+            return render_template("processamento-ok.html", nome_arquivo=session["nome_arquivo"], encoding=encoding, delimitador=delimitador)
         except:
-            os.remove(caminho_arquivo_usuario)
-            return render_template("processamento-falha.html", nome_arquivo=nome_arquivo_do_usuario)
+            os.remove(session["caminho_arquivo"])
+            return render_template("processamento-falha.html", nome_arquivo=session["nome_arquivo"])
 
 
 
@@ -173,6 +182,7 @@ def alinhamento():
         crosswalk = dict(map(lambda i,j : (i,j) , session["cabecalho_usuario_lista"], crosswalk))
 
 
+        
         print("crosswalk_vocabulario_antes:", crosswalk_vocabulario)
         crosswalk_vocabulario = list(map(lambda x: crosswalk.get(x, x), crosswalk_vocabulario))
         print("crosswalk_vocabulario_depois:", crosswalk_vocabulario)
@@ -237,7 +247,8 @@ def recuperar_alinhamento():
 def processamento():
 
     try:
-        print(session["caminho_crosswalk"])
+        #print(session["caminho_crosswalk"])
+        pass
     except:
         recuperacao = request.form.get('recuperacao', None)
         caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", str(recuperacao))
@@ -274,7 +285,7 @@ def processamento():
 
     # Iniciando loops
     for metadado in cco_crosswalked:
-        print("\n\n", metadado)
+        #print("\n\n", metadado)
 
         # Selecionar regras aplicaveis ao elemento de metadado
         regras_aplicaveis = regras_cco[regras_cco.iloc[:,1].str.contains(metadado)]
@@ -291,7 +302,7 @@ def processamento():
 
             avaliacoes = []
 
-            print("Nome da regra:",nome_regra,"\nExpressão:", regex,"\nNegação:", ind_negativo, "\nTipo:", tipo)
+            #print("Nome da regra:",nome_regra,"\nExpressão:", regex,"\nNegação:", ind_negativo, "\nTipo:", tipo)
 
             # Loop para cada registro presenta na coluna do metadado
             for index_dado, row_dado in coluna_foco.iterrows():
@@ -357,49 +368,67 @@ def processamento():
     session["adequacao_por_dimensao_dimencoes"] = adequacao_por_dimensao["Dimensão"].to_list()
     session["adequacao_por_dimensao_adequacao"] = adequacao_por_dimensao["Adequacao"].astype('int').to_list()
 
-    # Detalhes 3 piores dimensões
-    adequacao_por_dimensao = adequacao_por_dimensao.sort_values(by=["Adequacao"])
-    piores_dimensoes = adequacao_por_dimensao["Dimensão"].to_list()[:3]
+    adequacao_por_dimensao = adequacao_por_dimensao.query("Adequacao != 100")
 
-    # 1º Pior
-    pior_dimensao_1 = piores_dimensoes[0]
-    session["pior_dimensao_1"] = pior_dimensao_1
-    pior_dimensao_1 = adequacao_por_regras_clean.query("Dimensão == '{}'".format(pior_dimensao_1))
+    adequacao_por_dimensao = adequacao_por_dimensao.sort_values(by=["Dimensão"])
+    analise_dimensoes = adequacao_por_dimensao["Dimensão"].to_list()
 
-    adequacao_por_dimensao1 = (pior_dimensao_1.groupby(["Colecao", "Dimensão", "Campo_Metadado"]).agg(
-        zeros=("zeros", "sum"),
-        ums=("ums", "sum")).reset_index())
+    dimensoes = {
+        "dimensao": []
+    }
 
-    adequacao_por_dimensao1["Total"] = adequacao_por_dimensao1["zeros"] + adequacao_por_dimensao1["ums"]
-    adequacao_por_dimensao1["Adequacao"] = (adequacao_por_dimensao1["ums"]/adequacao_por_dimensao1["Total"]) * 100
+    # "Dimensão": ["Campos"]
+    campos = dict()
 
-    session["adequacao_por_dimensao_dimencoes1"] = adequacao_por_dimensao1["Campo_Metadado"].to_list()
-    session["adequacao_por_dimensao_adequacao1"] = adequacao_por_dimensao1["Adequacao"].astype('int').to_list()
+    # "Dimensão": ["valores campos"]
+    valores_campos = dict()
 
-    # 2º Pior
-    pior_dimensao_2 = piores_dimensoes[1]
-    session["pior_dimensao_2"] = pior_dimensao_2
-    pior_dimensao_2 = adequacao_por_regras_clean.query("Dimensão == '{}'".format(pior_dimensao_2))
+    # "Campos": ["Regras"]
+    regras = dict()
 
-    adequacao_por_dimensao2 = (pior_dimensao_2.groupby(["Colecao", "Dimensão", "Campo_Metadado"]).agg(
-        zeros=("zeros", "sum"),
-        ums=("ums", "sum")).reset_index())
+    for x in analise_dimensoes:
+        dimensoes["dimensao"].append(x)
 
-    adequacao_por_dimensao2["Total"] = adequacao_por_dimensao2["zeros"] + adequacao_por_dimensao2["ums"]
-    adequacao_por_dimensao2["Adequacao"] = (adequacao_por_dimensao2["ums"]/adequacao_por_dimensao2["Total"]) * 100
+        avaliacao = adequacao_por_regras_clean.query("Dimensão == '{}'".format(x))
+        avaliacao = (avaliacao.groupby(["Colecao", "Dimensão", "Campo_Metadado"]).agg(
+            zeros=("zeros", "sum"),
+            ums=("ums", "sum")).reset_index())
 
-    session["adequacao_por_dimensao_dimencoes2"] = adequacao_por_dimensao2["Campo_Metadado"].to_list()
-    session["adequacao_por_dimensao_adequacao2"] = adequacao_por_dimensao2["Adequacao"].astype('int').to_list()
+        avaliacao["Total"] = avaliacao["zeros"] + avaliacao["ums"]
+        avaliacao["Adequacao"] = (avaliacao["ums"]/avaliacao["Total"]) * 100
+        avaliacao = avaliacao.sort_values(by=["Adequacao"], ascending=True)
 
+        # avaliacao = avaliacao.query("Adequacao != 100")
 
-
+        campos_list = avaliacao["Campo_Metadado"].to_list()
+        valores_campos_list = avaliacao["Adequacao"].astype('int').to_list()
 
 
+        campos[x] = campos_list
+        valores_campos[x] = valores_campos_list        
+
+        for campo in campos_list:
+            #print(campo)
+            avaliacao1 = adequacao_por_regras_clean.query("Dimensão == '{}' and Campo_Metadado == '{}'".format(x, campo))
+            avaliacao1 = (avaliacao1.groupby(["Regra"]).agg(
+                zeros=("zeros", "sum"),
+                ums=("ums", "sum")).reset_index())
+
+            avaliacao1["Total"] = avaliacao1["zeros"] + avaliacao1["ums"]
+            avaliacao1["Adequacao"] = (avaliacao1["ums"]/avaliacao1["Total"]) * 100
+
+            avaliacao1 = avaliacao1.query("Adequacao != 100")
+            avaliacao1 = avaliacao1.sort_values(by=["Adequacao"], ascending=True)
+
+            regra = avaliacao1["Regra"].to_list()
+            # valores_regras = avaliacao1["Adequacao"].astype('int').to_list()
+
+            regras[campo] = regra
     
-
-
-    # Adequação por campo
-
+    session["dimensoes"] = dimensoes
+    session["campos"] = campos
+    session["valores_campos"] = valores_campos
+    session["regras"] = regras
 
     return redirect(url_for('relatorio'))
     #return render_template("report.html", imagem=nome_imagem)
@@ -408,18 +437,16 @@ def processamento():
 @app.route("/relatorio", methods=["GET"])
 def relatorio():
 
-	#session.clear()
+    #session.clear()
 
-	return render_template("report.html", 
-		adequacao_total=session["adequacao_total"], 
-		adequacao_por_dimensao_adequacao=session["adequacao_por_dimensao_adequacao"],
-		adequacao_por_dimensao_dimencoes=session["adequacao_por_dimensao_dimencoes"],
-		pior_dimensao_1=session["pior_dimensao_1"],
-		adequacao_por_dimensao_dimencoes1=session["adequacao_por_dimensao_dimencoes1"],
-		adequacao_por_dimensao_adequacao1=session["adequacao_por_dimensao_adequacao1"],
-		pior_dimensao_2=session["pior_dimensao_2"],
-		adequacao_por_dimensao_dimencoes2=session["adequacao_por_dimensao_dimencoes2"],
-		adequacao_por_dimensao_adequacao2=session["adequacao_por_dimensao_adequacao2"])
+    return render_template("report.html", 
+        adequacao_total=session["adequacao_total"], 
+        adequacao_por_dimensao_adequacao=session["adequacao_por_dimensao_adequacao"],
+        adequacao_por_dimensao_dimencoes=session["adequacao_por_dimensao_dimencoes"],
+        dimensoes=session["dimensoes"],
+        campos=session["campos"],
+        valores_campos=session["valores_campos"],
+        regras=session["regras"])
 
 @app.route("/download", methods=["GET"])
 def download():

@@ -4,13 +4,13 @@
 <main class="home w-100 m-auto blur">        
       <form action="{{url_for('alinhamento')}}" method="post">
         <div class="mb-5">
-          <label for="nome_depara" class="form-label col-sm-2 col-form-label font-weight-bold">{{ nome_crosswalk }}</label>
+          <label for="nome_depara" class="form-label col-sm-2 col-form-label font-weight-bold"><b>{{ nome_crosswalk }}</b></label>
           <input hidden name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="Com qual nome deseja salvar este alinhamento?" value="{{ nome_crosswalk }}">
         </div>
 
         {% for key, value in cabecalho_usuario.items() %}
         <div class="form-group mb-5">
-          <label class="form-label font-weight-bold" for="{{ column }}">{{ key }}</label>
+          <label class="form-label font-weight-bold" for="{{ column }}"><b>{{ key }}</b></label>
           <select name="{{ value }}" class="form-control" id="{{ value }}">
             <option value="{{ value }}" selected>{{ value }}</option>
             {% for elemento_cco in esquema_cco %}
