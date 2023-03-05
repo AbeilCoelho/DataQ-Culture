@@ -2,3 +2,8 @@ __pycache__/
 data/acervos/
 data/acervos/*
 data/alinhamentos/
+data/alinhamentos/*
+data/amostras/
+data/amostras/*
+data/*.xlsx
+uploads/*
