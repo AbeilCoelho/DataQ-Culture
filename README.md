@@ -15,7 +15,7 @@ Para usar o DataQ Culture, siga as seguintes instruções:
 3. Execute o arquivo `app.py`
 4. Vá para o endereço local do navegador (http://192.168.0...:8000)
 5. Carregue um arquivo CSV
-6. Realize o alinhamento entre as colunas do seu arquivo com as do CCO, para mais detalhes desta etapa veja [este artigo](https://doi.org/10.5007/1518-2924.2023.e90510). 
+6. Realize o alinhamento entre as colunas do seu arquivo com as do CCO, para mais detalhes desta etapa veja [este artigo](https://doi.org/10.5007/1518-2924.2023.e90510)
 7. Veja os resultados e áreas de atenção para melhorar a qualidade do seu acervo
 
 ## Contribuição
