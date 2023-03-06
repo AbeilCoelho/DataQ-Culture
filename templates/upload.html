@@ -2,12 +2,12 @@
 
 {% block content %}
   <main class="upload w-100 m-auto blur">
-    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" required>
-      <img class="mb-4" src="{{ url_for('static', filename='globe.png') }}" alt="Logo DataQ" width="200" height="200 ">
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+      <img class="mb-4" src="{{ url_for('static', filename='globe.png') }}" alt="Logo DataQ" width="200" height="200">
       <h1 class="h3 mb-3 fw-normal">Avaliar</h1>
       <div class="mb-3">
         <label for="arquivo" class="form-label">Selecione um acervo</label>
-        <input id="arquivo" class="form-control" type="file" name="file" accept=".csv" required />
+        <input id="arquivo" class="form-control" type="file" name="file" accept=".csv" required>
       </div>
       <button class="w-100 btn btn-lg btn-primary" type="submit">Processar</button>
     </form>
