@@ -2,7 +2,7 @@
 Data de criação: 13/02/2023
 Descrição: Projeto de mestrado DataQ-cultura
 Versão: 1
-Data de modificação: 05/03/2023 """
+Data de modificação: 08/03/2023 """
 
 import csv
 import os
@@ -19,7 +19,7 @@ from flask import (
     redirect,
 )
 import pandas as pd
-import magic
+from chardet.universaldetector import UniversalDetector
 from analisador import verificador
 
 
@@ -93,9 +93,13 @@ def upload():
 
         # Detectar encoding e delimitador do arquivo do usuário
         try:
-            blob = open(session["caminho_arquivo"], "rb").read()
-            magic_mime = magic.Magic(mime_encoding=True)
-            encoding = magic_mime.from_buffer(blob)
+            detector = UniversalDetector()
+            for line in open(session["caminho_arquivo"], "rb"):
+                detector.feed(line)
+                if detector.done: break
+
+            detector.close()
+            encoding = detector.result.get('encoding')
             session["encoding"] = encoding
             print("encoding:", encoding)
 
