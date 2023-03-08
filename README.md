@@ -17,7 +17,7 @@ Para usar o DataQ Culture, siga as seguintes instruções:
 
 3. Execute o arquivo `app.py`
 4. No terminal aparecerá um endereço de IP, acesse esse IP no navegador<br>
-4.1 é algo como "http://192.168.0.5:8000/
+4.1 é algo como "http://127.0.0.1:5000/
 
 5. Carregue um arquivo CSV
 6. Realize o alinhamento entre as colunas do seu arquivo com as do CCO, para mais detalhes desta etapa veja [este artigo](https://doi.org/10.5007/1518-2924.2023.e90510)
