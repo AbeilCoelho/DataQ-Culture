@@ -1,6 +1,7 @@
 __pycache__/
 data/acervos/
 data/acervos/*
+data/alinhamentos/*
 !data/alinhamentos/.gitkeep 
 data/amostras/
 data/amostras/*
