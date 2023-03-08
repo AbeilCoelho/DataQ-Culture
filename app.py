@@ -27,8 +27,8 @@ app = Flask(__name__)
 app.secret_key = "1skrLdKMnX'dZ{0#XEuS+r"
 app.config["UPLOAD_EXTENSIONS"] = [".csv", ".CSV"]
 app.config["UPLOAD_PATH"] = "uploads"
-PASTA_DADOS = "data"
-arquivo_crosswalks = os.path.join(PASTA_DADOS, "alinhamentos\\alinhamentos.parquet")
+PASTA_DADOS = "./data"
+arquivo_crosswalks = os.path.join(PASTA_DADOS, "alinhamentos/alinhamentos.parquet")
 
 esquema_cco = [
     "Work Type",
