@@ -25,7 +25,7 @@ from analisador import verificador
 
 app = Flask(__name__)
 if os.getenv("COLAB_RELEASE_TAG"):
-	print("Sendo executado no Google Colab :D")
+	print("Sendo executado no Google Colab :D\n")
 	from flask_ngrok import run_with_ngrok
 	run_with_ngrok(app)
 
