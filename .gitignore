@@ -7,3 +7,4 @@ data/amostras/
 data/amostras/*
 data/*.xlsx
 uploads/*
+!uploads/.gitkeep 
