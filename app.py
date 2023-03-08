@@ -26,7 +26,6 @@ from analisador import verificador
 app = Flask(__name__)
 if os.getenv("COLAB_RELEASE_TAG"):
 	print("Sendo executado no Google Colab :D\n")
-	app = Flask(__name__, template_folder='DataQ-Culture/templates')
 
 
 app.secret_key = "1skrLdKMnX'dZ{0#XEuS+r"
@@ -317,7 +316,7 @@ def recuperar_alinhamento():
 def processamento():
 
     try:
-        # print(session["caminho_crosswalk"])
+        print(session["caminho_crosswalk"])
         pass
     except:
         recuperacao = request.form.get("recuperacao", None)
