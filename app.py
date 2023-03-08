@@ -24,6 +24,9 @@ from analisador import verificador
 
 
 app = Flask(__name__)
+if os.getenv("COLAB_RELEASE_TAG"):
+	run_with_ngrok(app)
+	
 app.secret_key = "1skrLdKMnX'dZ{0#XEuS+r"
 app.config["UPLOAD_EXTENSIONS"] = [".csv", ".CSV"]
 app.config["UPLOAD_PATH"] = "uploads"
