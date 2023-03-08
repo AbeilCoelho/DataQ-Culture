@@ -11,12 +11,12 @@ O DataQ Culture oferece uma solução fácil e eficiente para garantir a qualida
 Para usar o DataQ Culture, siga as seguintes instruções:
 
 1. Faça o download do DataQ Culture no repositório https://github.com/AbeilCoelho/DataQ-Culture
-2. Instale os pré-requisitos necessários (requirements.txt)
-2.1 no Windows use o comando "python -m pip install -r requirements.txt"
+2. Instale os pré-requisitos necessários (requirements.txt)<br>
+2.1 no Windows use o comando "python -m pip install -r requirements.txt"<br>
 2.2 No Linux use o comando "python3 -m pip install -r requirements.txt"
 
 3. Execute o arquivo `app.py`
-4. No terminal aparecerá um endereço de IP, acesse esse IP no navegador
+4. No terminal aparecerá um endereço de IP, acesse esse IP no navegador<br>
 4.1 é algo como "http://192.168.0.5:8000/
 
 5. Carregue um arquivo CSV
