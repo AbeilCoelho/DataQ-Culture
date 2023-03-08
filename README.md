@@ -12,8 +12,13 @@ Para usar o DataQ Culture, siga as seguintes instruções:
 
 1. Faça o download do DataQ Culture no repositório https://github.com/AbeilCoelho/DataQ-Culture
 2. Instale os pré-requisitos necessários (requirements.txt)
+2.1 no Windows use o comando "python -m pip install -r requirements.txt"
+2.2 No Linux use o comando "python3 -m pip install -r requirements.txt"
+
 3. Execute o arquivo `app.py`
-4. Vá para o endereço local do navegador (http://192.168.0...:8000)
+4. No terminal aparecerá um endereço de IP, acesse esse IP no navegador
+4.1 é algo como "http://192.168.0.5:8000/
+
 5. Carregue um arquivo CSV
 6. Realize o alinhamento entre as colunas do seu arquivo com as do CCO, para mais detalhes desta etapa veja [este artigo](https://doi.org/10.5007/1518-2924.2023.e90510)
 7. Veja os resultados e áreas de atenção para melhorar a qualidade do seu acervo
