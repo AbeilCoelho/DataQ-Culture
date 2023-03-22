@@ -10,6 +10,8 @@ O DataQ Culture oferece uma solução fácil e eficiente para garantir a qualida
 
 Para usar o DataQ Culture, siga as seguintes instruções:
 
+Para passos detalhados de instalação [assista este vídeo](https://youtu.be/2aTdY7H0qG0) ou execute os passos abaixo:
+
 1. Faça o download do DataQ Culture no repositório https://github.com/AbeilCoelho/DataQ-Culture
 2. Instale os pré-requisitos necessários (requirements.txt)<br>
 2.1 no Windows use o comando "python -m pip install -r requirements.txt"<br>
