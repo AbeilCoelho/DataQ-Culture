@@ -1,44 +1,44 @@
-# DataQ Culture - Ferramenta de avaliação de qualidade de dados para acervos culturais
+# DataQ Culture - Data Quality Assessment Tool for Cultural Collections
 
-O DataQ Culture é uma ferramenta de avaliação de qualidade de dados para acervos culturais, desenvolvido como projeto de mestrado na Universidade Federal do Espírito Santo (Ufes) no Brasil. O objetivo do DataQ Culture é ajudar profissionais e instituições a garantir a integridade e a precisão dos dados em seus acervos culturais.
+The DataQ Culture is a data quality assessment tool designed for cultural collections, developed as a master's project at the Federal University of Espírito Santo (Ufes) in Brazil. The objective of DataQ Culture is to assist professionals and institutions in ensuring the integrity and accuracy of data within their cultural collections.
 
-A ferramenta é baseada no guia de catalogação de objetos culturais [CCO (Catalogue of Cultural Objects)](https://vraweb.org/resourcesx/cataloging-cultural-objects/), guia de referência internacional, permitindo aos usuários calcular um índice de qualidade que reflete o nível de confiança na integridade e na precisão dos dados em um acervo cultural. Esse índice é baseado em uma série de critérios de acordo com as diretrizes estabelecidas pelo CCO.
+The tool is based on the Catalogue of Cultural Objects (CCO), an international reference guide for cataloging cultural objects. This enables users to calculate a quality index that reflects the level of confidence in the integrity and accuracy of data within a cultural collection. This index is established based on a set of criteria according to the guidelines outlined by CCO.
 
-O DataQ Culture oferece uma solução fácil e eficiente para garantir a qualidade dos dados em acervos culturais, possibilitando a identificação de problemas e a correção de erros antes que eles sejam ampliados ou causem danos irreparáveis. Além disso, a ferramenta também pode ser usada para monitorar a qualidade dos dados em tempo real e para garantir que os dados em um acervo cultural sejam mantidos precisos e atualizados, de acordo com as normas internacionais estabelecidas pelo CCO.
+DataQ Culture provides an easy and efficient solution for maintaining data quality in cultural collections, enabling the identification of issues and correction of errors before they escalate or lead to irreparable damage. Additionally, the tool can also be used to monitor real-time data quality and ensure that data within a cultural collection remains accurate and up-to-date, following the international standards set by CCO.
 
-## Como usar
+## How to Use
 
-Para usar o DataQ Culture, siga as seguintes instruções:
+To utilize DataQ Culture, follow the instructions below:
 
-Para passos detalhados de instalação [assista este vídeo](https://youtu.be/2aTdY7H0qG0) ou execute os passos abaixo:
+For detailed installation steps, [watch this video](https://youtu.be/2aTdY7H0qG0) or perform the steps outlined:
 
-1. Faça o download do DataQ Culture no repositório https://github.com/AbeilCoelho/DataQ-Culture
-2. Instale os pré-requisitos necessários (requirements.txt)<br>
-2.1 no Windows use o comando "python -m pip install -r requirements.txt"<br>
-2.2 No Linux use o comando "python3 -m pip install -r requirements.txt"
+1. Download DataQ Culture from the repository: https://github.com/AbeilCoelho/DataQ-Culture
+2. Install the required prerequisites (requirements.txt)<br>
+2.1 For Windows, use the command "python -m pip install -r requirements.txt"<br>
+2.2 For Linux, use the command "python3 -m pip install -r requirements.txt"
 
-3. Execute o arquivo `app.py`
-4. No terminal aparecerá um endereço de IP, acesse esse IP no navegador<br>
-4.1 é algo como "http://127.0.0.1:5000/
+3. Execute the `app.py` file.
+4. An IP address will appear in the terminal. Access this IP address in your browser.<br>
+4.1 It will be something like "http://127.0.0.1:5000/"
 
-5. Carregue um arquivo CSV
-6. Realize o alinhamento entre as colunas do seu arquivo com as do CCO, para mais detalhes desta etapa veja [este artigo](https://doi.org/10.5007/1518-2924.2023.e90510)
-7. Veja os resultados e áreas de atenção para melhorar a qualidade do seu acervo
+5. Upload a CSV file.
+6. Align the columns of your file with those of CCO. For more details on this step, refer to [this article](https://doi.org/10.5007/1518-2924.2023.e90510).
+7. Review the results and areas requiring attention to enhance the quality of your collection.
 
-## Contribuição
+## Contribution
 
-Se você quiser contribuir para o desenvolvimento do DataQ Culture, sinta-se livre para enviar pull requests ou entrar em contato com os desenvolvedores.
+If you wish to contribute to the development of DataQ Culture, feel free to submit pull requests or get in touch with the developers.
 
-## Autores
+## Authors
 
-O DataQ Culture foi desenvolvido como projeto de mestrado na Universidade Federal do Espírito Santo (Ufes) no Brasil, pelos seguintes autores:
+DataQ Culture was developed as a master's project at the Federal University of Espírito Santo (Ufes) in Brazil by the following authors:
 
 - Abeil Coelho Júnior (UFES)
 
-Orientado por:
+Supervised by:
 - Daniela Lucas da Silva Lemos (UFES)
 - Fabrício Martins Mendonça (UFJF)
 
-## Licença
+## License
 
-Este projeto é licenciado sob a licença MIT - consulte o arquivo LICENSE.md para obter detalhes.
+This project is licensed under the MIT License - refer to the LICENSE.md file for details.
