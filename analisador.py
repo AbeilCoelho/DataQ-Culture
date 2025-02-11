@@ -1,14 +1,16 @@
-""" Autor: Abeil Coelho Júnior
-Data de criação: 13/02/2023
+"""
+Autor: Abeil Coelho Júnior
+Data de criação: 2023-02-13
 Descrição: Projeto de mestrado
 Versão: 1
-Data de modificação: 14/02/2023 """
+Data de modificação: 2025-02-11
+"""
 
 import collections
 import os
 import re
-import pandas as pd
 
+import pandas as pd
 
 pasta_dados = "data"
 

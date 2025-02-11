@@ -1,40 +1,46 @@
-""" Autor: Abeil Coelho Júnior
-Data de criação: 13/02/2023
+"""
+Autor: Abeil Coelho Júnior
+Data de criação: 2023-02-13
 Descrição: Projeto de mestrado DataQ-cultura
 Versão: 1
-Data de modificação: 08/03/2023 """
+Data de modificação: 2025-02-11
+"""
 
 import csv
-import os
 import json
-from werkzeug.utils import secure_filename
-from flask import (
-    Flask,
-    render_template,
-    session,
-    send_file,
-    url_for,
-    request,
-    abort,
-    redirect,
-)
+import os
+
 import pandas as pd
-from chardet.universaldetector import UniversalDetector
+
+from helpers.utils import detect_encoding, detect_delimiter
 from analisador import verificador
 
+from flask import (
+    Flask,
+    abort,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    session,
+    url_for,
+)
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+# Test to run the service on Google Colab
 if os.getenv("COLAB_RELEASE_TAG"):
-	print("Sendo executado no Google Colab :D\n")
+    print("Sendo executado no Google Colab :D\n")
 
 
 app.secret_key = "1skrLdKMnX'dZ{0#XEuS+r"
 app.config["UPLOAD_EXTENSIONS"] = [".csv", ".CSV"]
 app.config["UPLOAD_PATH"] = "uploads"
-PASTA_DADOS = "./data"
-arquivo_crosswalks = os.path.join(PASTA_DADOS, "alinhamentos/alinhamentos.parquet")
+DATA_FOLDER = "./data"
+crosswalk_file = os.path.join(DATA_FOLDER, "alinhamentos/alinhamentos.parquet")
 
-esquema_cco = [
+cco_schema = [
     "Work Type",
     "Title",
     "Creator",
@@ -59,11 +65,12 @@ esquema_cco = [
 
 
 try:
-    alinhamentos = pd.read_parquet(arquivo_crosswalks)
-except:
+    loaded_alignment = pd.read_parquet(crosswalk_file)
+except FileNotFoundError:
+    print("No crosswalk file found. Loading empty scheme")
     data = [["0", "0", 0]]
-    alinhamentos = pd.DataFrame(data, columns=["nome", "colunas", "id"])
-    alinhamentos.to_parquet(arquivo_crosswalks)
+    loaded_alignment = pd.DataFrame(data, columns=["nome", "colunas", "id"])
+    loaded_alignment.to_parquet(crosswalk_file)
 
 
 @app.route("/", methods=["GET"])
@@ -77,88 +84,68 @@ def upload():
         return render_template("upload.html")
 
     if request.method == "POST":
-        arquivo_enviado_pelo_usuario = request.files["file"]
+        user_sent_file = request.files["file"]
 
         # Verificar se o conteúdo que o usuário está subindo é seguro
-        nome_arquivo_do_usuario = secure_filename(arquivo_enviado_pelo_usuario.filename)
-        if nome_arquivo_do_usuario != "":
-            extensao_arquivo = os.path.splitext(nome_arquivo_do_usuario)[1]
-            if extensao_arquivo not in app.config["UPLOAD_EXTENSIONS"]:
+        user_sent_filename = secure_filename(user_sent_file.filename)
+        if user_sent_filename != "":
+            user_sent_file_extension = os.path.splitext(user_sent_filename)[1]
+            if user_sent_file_extension not in app.config["UPLOAD_EXTENSIONS"]:
                 abort(400)
 
-        caminho_arquivo_usuario = os.path.join(
-            app.config["UPLOAD_PATH"], nome_arquivo_do_usuario
+        user_sent_file_path = os.path.join(
+            app.config["UPLOAD_PATH"], user_sent_filename
         )
-        session["caminho_arquivo"] = caminho_arquivo_usuario
-        session["nome_arquivo"] = nome_arquivo_do_usuario
+        session["user_sent_file_path"] = user_sent_file_path
+        session["user_sent_filename"] = user_sent_filename
 
         # Salvando arquivo do usuário
-        arquivo_enviado_pelo_usuario.save(caminho_arquivo_usuario)
+        user_sent_file.save(user_sent_file_path)
 
-        # Detectar encoding e delimitador do arquivo do usuário
-        try:
-            detector = UniversalDetector()
-            for line in open(session["caminho_arquivo"], "rb"):
-                detector.feed(line)
-                if detector.done: break
-
-            detector.close()
-            encoding = detector.result.get('encoding')
-            session["encoding"] = encoding
-            print("encoding:", encoding)
-
-            # Verificar se o arquivo é curso demais
-            num_lines = sum(1 for line in open(session["caminho_arquivo"], "rb").read())
-            if num_lines < 2:
-                print("O arquivo é muito curto.")
-                raise
-
-            delimitadores = [
-                "\x00",
-                "\x01",
-                "^",
-                ":",
-                ",",
-                "\t",
-                ":",
-                ";",
-                "|",
-                "~",
-                " ",
-            ]
-
-            with open(
-                session["caminho_arquivo"], encoding=encoding
-            ) as verificar_delimitador:
-                line = next(verificar_delimitador)
-                dialect = csv.Sniffer().sniff(line, delimitadores)
-                delimitador = dialect.delimiter
-                print("delimitador:", delimitador)
-
-                session["delimitador"] = delimitador
-
+        # Detectar encoding do arquivo do usuário
+        encoding = detect_encoding(user_sent_file)
+        if not encoding:
+            os.remove(user_sent_file)
             return render_template(
-                "processamento-ok.html",
-                nome_arquivo=session["nome_arquivo"],
-                encoding=encoding,
-                delimitador=delimitador,
+                "processamento-falha.html", nome_arquivo=session["user_sent_filename"]
             )
-        except:
-            os.remove(session["caminho_arquivo"])
+        session["encoding"] = encoding
+
+        # Check if the file is too short
+        num_lines = sum(1 for _ in open(user_sent_file, "rb"))
+        if num_lines < 2:
+            print("O arquivo é muito curto.")
+            os.remove(user_sent_file)
             return render_template(
-                "processamento-falha.html", nome_arquivo=session["nome_arquivo"]
+                "processamento-falha.html", nome_arquivo=session["user_sent_filename"]
             )
+
+        # Detectar delimiter do arquivo do usuário
+        delimiter = detect_delimiter(user_sent_file, encoding)
+        session["encoding"] = encoding
+        if not delimiter:
+            os.remove(user_sent_file)
+            return render_template(
+                "processamento-falha.html", nome_arquivo=session["user_sent_filename"]
+            )
+        session["delimiter"] = delimiter
+
+        return render_template(
+            "processamento-ok.html",
+            nome_arquivo=session["user_sent_filename"],
+            encoding=encoding,
+            delimitador=delimiter,
+        )
 
 
 @app.route("/alinhamento", methods=["GET", "POST"])
 def alinhamento():
     if request.method == "GET":
-
         dados_alinhamento = pd.read_csv(
-            session["caminho_arquivo"],
-            sep=session["delimitador"],
-            encoding=session["encoding"],
-            nrows=2,
+            session["user_sent_file_path"],
+            sep = session["delimiter"],
+            encoding = session["encoding"],
+            nrows = 2,
         )
         dados_alinhamento = dados_alinhamento.loc[
             :, ~dados_alinhamento.columns.str.match("Unnamed")
@@ -175,7 +162,7 @@ def alinhamento():
         key_cabecalho_usuario.replace(" ", "_")
 
         try:
-            lista_pretendentes_crosswalk = pd.read_parquet(arquivo_crosswalks)
+            lista_pretendentes_crosswalk = pd.read_parquet(crosswalk_file)
             lista_pretendentes_crosswalk = lista_pretendentes_crosswalk.query(
                 "colunas == '{}'".format(key_cabecalho_usuario)
             )
@@ -189,8 +176,8 @@ def alinhamento():
         return render_template(
             "alinhamento.html",
             cabecalho_usuario=cabecalho_usuario,
-            file_name=session["nome_arquivo"],
-            esquema_cco=esquema_cco,
+            file_name=session["user_sent_filename"],
+            esquema_cco=cco_schema,
             lista_pretendentes_crosswalk=lista_pretendentes_crosswalk,
         )
 
@@ -211,7 +198,7 @@ def alinhamento():
         nome_crosswalk = crosswalk[0]
 
         # Remover crosswalk com mesmo nome e colunas
-        croswalks_salvos = pd.read_parquet(arquivo_crosswalks)
+        croswalks_salvos = pd.read_parquet(crosswalk_file)
 
         croswalks_salvos = croswalks_salvos.query(
             "colunas != '{}' or nome != '{}'".format(
@@ -228,7 +215,7 @@ def alinhamento():
 
         frames = [croswalks_salvos, novo_crosswalk]
         croswalks_salvos = pd.concat(frames)
-        croswalks_salvos.to_parquet(arquivo_crosswalks)
+        croswalks_salvos.to_parquet(crosswalk_file)
 
         # Remover título do alinhamento
         crosswalk.pop(0)
@@ -245,13 +232,13 @@ def alinhamento():
         print("crosswalk_vocabulario_depois:", crosswalk_vocabulario)
 
         # Salvar alinhamento com nome de colunas antes e depois
-        caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", str(novo_id))
+        caminho_crosswalk = os.path.join(DATA_FOLDER, "alinhamentos", str(novo_id))
         with open(caminho_crosswalk, "w") as arquivo_crosswalk:
             arquivo_crosswalk.write(json.dumps(crosswalk))
 
         # Salvar colunas com indicação de usu de vocabulário controlado
         caminho_crosswalk_vocabulario = os.path.join(
-            PASTA_DADOS, "alinhamentos", str(novo_id) + "_vocabulario"
+            DATA_FOLDER, "alinhamentos", str(novo_id) + "_vocabulario"
         )
         crosswalk_vocabulario = pd.DataFrame(
             crosswalk_vocabulario, columns=["Campos_Ajutados"]
@@ -271,15 +258,14 @@ def recuperar_alinhamento():
         nome_rec = request.form.get("nome_rec", None)
 
         if ind_rec == "2":
-
-            caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
+            caminho_crosswalk = os.path.join(DATA_FOLDER, "alinhamentos", recuperacao)
             with open(caminho_crosswalk) as crosswalk_salvo:
                 crosswalk_salvo = crosswalk_salvo.read()
             print("crosswalk_salvo:", crosswalk_salvo)
             crosswalk_salvo = json.loads(crosswalk_salvo)
 
             recuperacao = recuperacao + "_vocabulario"
-            recuperacao = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
+            recuperacao = os.path.join(DATA_FOLDER, "alinhamentos", recuperacao)
             caminho_crosswalk_vocabulario = pd.read_csv(recuperacao, index_col=0)
             caminho_crosswalk_vocabulario = caminho_crosswalk_vocabulario[
                 "Campos_Ajutados"
@@ -287,7 +273,7 @@ def recuperar_alinhamento():
 
             return render_template(
                 "editar_alinhamento.html",
-                esquema_cco=esquema_cco,
+                esquema_cco=cco_schema,
                 cabecalho_usuario=crosswalk_salvo,
                 nome_crosswalk=nome_rec,
                 caminho_crosswalk_vocabulario=caminho_crosswalk_vocabulario,
@@ -295,37 +281,35 @@ def recuperar_alinhamento():
 
         # Remover alinhamento
         if ind_rec == "3":
-
             # Exluir arquivo
-            caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
+            caminho_crosswalk = os.path.join(DATA_FOLDER, "alinhamentos", recuperacao)
             os.remove(caminho_crosswalk)
 
             recuperacao = recuperacao + "_vocabulario"
-            caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", recuperacao)
+            caminho_crosswalk = os.path.join(DATA_FOLDER, "alinhamentos", recuperacao)
             os.remove(caminho_crosswalk)
 
             # Remove registro
-            croswalks_salvos = pd.read_parquet(arquivo_crosswalks)
+            croswalks_salvos = pd.read_parquet(crosswalk_file)
             croswalks_salvos = croswalks_salvos.query("nome != '{}'".format(nome_rec))
-            croswalks_salvos.to_parquet(arquivo_crosswalks)
+            croswalks_salvos.to_parquet(crosswalk_file)
 
             return redirect(url_for("alinhamento"))
 
 
 @app.route("/processamento", methods=["GET", "POST"])
 def processamento():
-
     try:
         print(session["caminho_crosswalk"])
         pass
     except:
         recuperacao = request.form.get("recuperacao", None)
-        caminho_crosswalk = os.path.join(PASTA_DADOS, "alinhamentos", str(recuperacao))
+        caminho_crosswalk = os.path.join(DATA_FOLDER, "alinhamentos", str(recuperacao))
         session["caminho_crosswalk"] = caminho_crosswalk
 
     # Carregando dados para processamento
-    regras_cco = pd.read_excel(os.path.join(PASTA_DADOS, "fontes\\Base_Regex.xlsx"))
-    dimencoes = pd.read_excel(os.path.join(PASTA_DADOS, "fontes\\Dimencoes.xlsx"))
+    regras_cco = pd.read_excel(os.path.join(DATA_FOLDER, "fontes\\Base_Regex.xlsx"))
+    dimencoes = pd.read_excel(os.path.join(DATA_FOLDER, "fontes\\Dimencoes.xlsx"))
 
     # Carregando arquivo com o crosswalk
     with open(session["caminho_crosswalk"]) as crosswalk_recuperado:
@@ -342,7 +326,7 @@ def processamento():
 
     # Lendo dados do usuário
     avaliacao_dados = pd.read_csv(
-        session["caminho_arquivo"],
+        session["user_sent_file_path"],
         sep=session["delimitador"],
         encoding=session["encoding"],
     )
@@ -389,7 +373,7 @@ def processamento():
                     ind_negativo,
                     tipo,
                     nome_regra,
-                    session["nome_arquivo"],
+                    session["user_sent_filename"],
                     metadado,
                     acervo_id,
                 )
@@ -399,7 +383,7 @@ def processamento():
                 {
                     "Avaliacao": avaliacoes,
                     "Dado": coluna_foco["foco"],
-                    "Colecao": session["nome_arquivo"],
+                    "Colecao": session["user_sent_filename"],
                     "Campo_Metadado": metadado,
                     "Regra": nome_regra,
                     "Regex": regex,
@@ -414,7 +398,15 @@ def processamento():
     resultado_colecao = resultado_colecao.reset_index()
     resultado_colecoes_data = (
         resultado_colecao.groupby(
-            ["Colecao", "Regra", "Campo_Metadado", "Dado", "Avaliacao", "Regex", "Total"]
+            [
+                "Colecao",
+                "Regra",
+                "Campo_Metadado",
+                "Dado",
+                "Avaliacao",
+                "Regex",
+                "Total",
+            ]
         )
         .agg(resultado=("Avaliacao", "count"))
         .reset_index()
@@ -441,8 +433,8 @@ def processamento():
         by=["Dimensão", "Campo_Metadado"]
     ).reset_index(drop=True)
 
-    nome_arquivo = session["nome_arquivo"] + ".xlsx"
-    nome_arquivo = os.path.join(PASTA_DADOS, nome_arquivo)
+    nome_arquivo = session["user_sent_filename"] + ".xlsx"
+    nome_arquivo = os.path.join(DATA_FOLDER, nome_arquivo)
     session["arquivo_download"] = nome_arquivo
     # session['nome_arquivo'] = nome_arquivo
 
@@ -568,9 +560,6 @@ def processamento():
 
 @app.route("/relatorio", methods=["GET"])
 def relatorio():
-
-    # session.clear()
-
     return render_template(
         "report.html",
         adequacao_total=session["adequacao_total"],
@@ -585,9 +574,7 @@ def relatorio():
 
 @app.route("/download", methods=["GET"])
 def download():
-
     arquivo = session["arquivo_download"]
-    # session.clear()
     return send_file(arquivo, as_attachment=True)
 
 
