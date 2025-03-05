@@ -1,118 +1,357 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <main class="home w-100 m-auto blur">
-	<h1 class="my-1">Resultados obtidos</h1>
-	<p>Os dados abaixo estão fortemente relacionados ao alinhamento realizado na tela de alinhamento.</p>
-	<h1>{{ nome_arquivo }}</h1>
-	<h3>A adequação dos dados avaliados foi de</h3>
-	<h3><b>{{ adequacao_total }}</b> de 100</h3> 
-<h3 class="mt-4">Adequação por dimensão</h3>
-<div>
-	<canvas id="porDimensao"></canvas>
-</div>
-<script>
-	const ctx1 = document.getElementById('porDimensao');
+    <h1 class="my-1">Data Quality Report</h1>
+    <p>Insights into the data quality of your dataset.</p>
+	<h3 class="mt-4">Overall Data Adequacy:</h3>
+    <h2><b>{{ adequacao_total }}%</b></h2>
 
-	new Chart(ctx1, {
-		type: 'bar',
-		data: {
-			labels: {{ adequacao_por_dimensao_dimencoes | safe }},
-			datasets: [{
-				label: '% de adequação',
-				data: {{ adequacao_por_dimensao_adequacao }},
-				borderWidth: 1
-			}]
-		},
-		plugins: [ChartDataLabels],
-		options: {
-			scales: {
-				y: {
-					beginAtZero: true
-				}
-			}
-		}
-	});
-</script>
+    <div style="display: flex; justify-content: space-around; align-items: center;">
 
-<p class="mt-3">Veja abaixo detalhes das dimensões que podem melhorar.</p>
+        <div class="chart-container" style="width: 40%; margin: 0;">
+            <h3 class="mt-4">Overall Data Adequacy</h3>
+            <canvas id="gaugeChart"></canvas>
+        </div>
 
-<div>
-	{% for dim in dimensoes.dimensao %}
-	<div class="my-4"><h4 class="pt-5">{{ dim }}</h4>
+        <div class="chart-container" style="width: 40%; margin: 0;">
+            <h3 class="mt-4">Amount of Items by Adequacy</h3>
+            <canvas id="pieChart"></canvas>
+        </div>
 
+    </div>
+	<hr>
+    <h3 class="mt-4">% Adequacy by Dimension</h3>
+    <div class="chart-container" style="width: 90%; max-width: 1200px; margin: auto;">
+        <canvas id="porDimensao"></canvas>
+    </div>
+	<hr>
+    <h3 class="mt-4">Completion Breakdown by Dimension</h3>
+    <div class="chart-container" style="width: 90%; max-width: 1200px; margin: auto;">
+        <canvas id="stackedBarChart"></canvas>
+    </div>
+	<hr>
+    <!-- <h3 class="mt-4">Distribution of Incomplete Fields by Dimension</h3>
+    <div class="chart-container" style="width: 80%; max-width: 600px; margin: auto;">
+        <canvas id="donutChart"></canvas>
+    </div>
+	<hr> -->
+    <h3 class="mt-4">Heatmap Collection Adequacy by Dimension</h3>
+    <div class="chart-container">
+        <table id="heatmap">
+            <thead>
+                <tr>
+                    <th>Collection</th>
+                    {% if heatmap_data %}
+                        {% for field in heatmap_data[heatmap_data|first].keys() %}
+                            <th>{{ field }}</th>
+                        {% endfor %}
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for dimension, field_data in heatmap_data.items() %}
+                    <tr>
+                        <th>{{ dimension }}</th>
+                        {% for field, value in field_data.items() %}
+							{% set hue = value %}
+							<td data-value="{{ value }}" style="background-color: hsl({{ hue }}, 100%, 50%);">{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+	<hr>
 
-		{% if campos[dim] | length == 1 %}
-		<p class="mt-2">O elemento <b>{{ campos[dim][0] }}</b> obteve uma adequação de <b>{{ valores_campos[dim][0] }}%</b>.</p>
-
-		<h6>Observe a adequação dos dados às regras:</h6>
-		{% for camp in campos[dim] %}
-		<div class="mb-5">
-			<ul class="list-unstyled">
-				{% for rule in regras[camp] %}
-					<li>{{ rule }}</li>
-				{% endfor %}
-			</ul>
-		</div>
-		{% endfor %}
-		{% else %}
-
-		<div>
-			<canvas id="a{{ dim | replace(" ", "_") | replace(".", "")}}"></canvas>
-		</div>
-
-		<script>
-			const a{{ dim | replace(" ", "_")| replace(".", "")}} = document.getElementById('a{{ dim | replace(" ", "_") | replace(".", "")}}');
-
-			new Chart(a{{ dim | replace(" ", "_")| replace(".", "")}}, {
-				type: 'bar',
-				data: {
-					labels: {{ campos[dim] | safe }},
-					datasets: [{
-						label: '% de adequação em em campo',
-						data: {{ valores_campos[dim] }},
-						borderWidth: 1,
-						borderColor: '#C34A36',
-						backgroundColor: '#FF8066',
-					}]
+    <script>
+        // Speedometer (Gauge Chart)
+		const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
+		new Chart(gaugeCtx, {
+			type: 'doughnut',
+			data: {
+				labels: ['Adequate', 'Inadequate'],
+				datasets: [{
+					data: [{{ adequacao_total }}, {{ 100 - adequacao_total }}],
+					backgroundColor: ['#4CAF50', 'lightgray'],
+				}]
+			},
+			options: {
+				circumference: 180,
+				rotation: 270,
+				cutout: '75%', // Reduce cutout to give more space for labels
+				layout: {
+					padding: {
+						top: 20,
+						bottom: 20
+					}
 				},
-				plugins: [ChartDataLabels],
-				options: {
-					scales: {
-						y: {
-							beginAtZero: true
+				plugins: {
+					legend: { display: false, position: 'bottom' },
+					datalabels: {
+						color: '#000',
+						font: { weight: 'bold', size: 14 },
+						anchor: 'end', // Adjust positioning to prevent clipping
+						align: 'start',
+						offset: -10, // Move labels slightly inward
+						formatter: (value, ctx) => {
+							let label = ctx.chart.data.labels[ctx.dataIndex];
+							return label + ': ' + value + '%';
 						}
 					}
 				}
-			})
-		</script>
+			},
+			plugins: [ChartDataLabels]
+		});
 
-		<h6>Observe a adequação dos dados às regras:</h6>
-		{% for camp in campos[dim] %}
-		<div class="mt-5"> 
-			{% if regras[camp] | length == 0 %}
-			
-			{% else %}
-				<p class="mb-2">Para o campo <b>{{ camp }}</b>:</p>
-				<ul class="list-unstyled">
-					{% for rule in regras[camp] %}
-						<li>{{ rule }}</li>
+        // Pie Chart
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Inadequate', 'Adequate'],
+                datasets: [{
+                    data: [{{ soma_total_0 }}, {{ soma_total_1 }}],
+                    backgroundColor: ['#FF6B6B', '#4CAF50'],
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: (value, ctx) => ctx.chart.data.labels[ctx.dataIndex] + '\n' + value,
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    </script>
+    <script>
+		// Bar chart
+        const ctx1 = document.getElementById('porDimensao');
+
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: {{ adequacao_por_dimensao_dimencoes | safe }},
+                datasets: [{
+                    label: '% of Adequacy',
+                    data: {{ adequacao_por_dimensao_adequacao }},
+                    backgroundColor: '#4CAF50',
+                    borderColor: '#388E3C',
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: "rgba(0,0,0,0.1)" }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true },
+					datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+    // Stacked Bar Chart
+    const stackedBarCtx = document.getElementById('stackedBarChart').getContext('2d');
+    new Chart(stackedBarCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ dimension_labels | safe }},
+            datasets: [{
+                label: 'Inadequate',
+                data: {{ dimension_mismatches | safe }},
+                backgroundColor: '#FF6B6B'
+            }, {
+                label: 'Adequate',
+                data: {{ dimension_matches | safe }},
+                backgroundColor: '#4CAF50'
+            }]
+        },
+		plugins: [ChartDataLabels],
+        options: {
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true }
+            },
+			plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true },
+					datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                    }
+                }
+        }
+    });
+    // Donut Chart
+    const donutCtx = document.getElementById('donutChart').getContext('2d');
+    new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for dim, count in dimension_mismatch_counts.items() %}'{{ dim }}',{% endfor %}],
+            datasets: [{
+                data: [{% for dim, count in dimension_mismatch_counts.items() %}{{ count }},{% endfor %}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+
+
+    </script>
+	<style>
+		#heatmap {
+			border-collapse: collapse;
+		}
+
+		#heatmap th, #heatmap td {
+			border: 1px solid #ddd;
+			padding: 8px;
+			text-align: center;
+		}
+
+		#heatmap th {
+			background-color: #f2f2f2;
+		}
+
+		/* Ensure correct specificity and use !important to override inline styles */
+		#heatmap td[data-value="0"] {
+			background-color: #fff !important; /* or any color indicating zero value */
+		}
+
+		#heatmap td {
+			color: #000;  /* Ensure text is visible */
+		}
+
+		
+	</style>
+
+    <h3 class="mt-5">Details on dimensions that can be improved:</h3>
+
+    <div>
+		{% for dim in dimensoes.dimensao %}
+			<div class="my-4">
+				<h4 class="pt-5">{{ dim }}</h4>
+	
+				{% if campos[dim] | length == 1 %}
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">Field: <b>{{ campos[dim][0] }}</b></h5>
+							<p class="card-text">Adequacy: <b>{{ valores_campos[dim][0] }}%</b></p>
+							<h6 class="card-subtitle mb-2 text-muted">Rule Details:</h6>
+							{% if regras[campos[dim][0]] %}
+							<ul class="list-unstyled">
+								{% for rule in regras[campos[dim][0]] %}
+									<li><i class="bi bi-x-circle-fill text-danger"></i> {{ rule }}</li>
+								{% endfor %}
+							</ul>
+							{% else %}
+								<p>No rules found for this field.</p>
+							{% endif %}
+						</div>
+					</div>
+	
+				{% else %}
+					<div class="chart-container" style="width: 80%; max-width: 600px; margin: auto;">
+						<canvas id="a{{ dim | replace(" ", "_") | replace(".", "") }}"></canvas>
+					</div>
+	
+					<script>
+						const ctx_{{ dim | replace(" ", "_") | replace(".", "") }} = document.getElementById('a{{ dim | replace(" ", "_") | replace(".", "") }}').getContext('2d');
+						new Chart(ctx_{{ dim | replace(" ", "_") | replace(".", "") }}, {
+							type: 'bar',
+							data: {
+								labels: {{ campos[dim] | safe }},
+								datasets: [{
+									label: '% Adequacy',
+									data: {{ valores_campos[dim] }},
+									backgroundColor: '#FF9800',
+									borderColor: '#F57C00',
+									borderWidth: 1
+								}]
+							},
+							plugins: [ChartDataLabels],
+							options: {
+								responsive: true,
+								scales: {
+									y: {
+										beginAtZero: true,
+										grid: { color: "rgba(0,0,0,0.1)" },
+										max: 100 // Set the maximum value for the Y-axis to 100
+									}
+								},
+								plugins: {
+									legend: { display: false },
+									tooltip: { enabled: true },
+									datalabels: {
+										color: '#fff',
+										font: { weight: 'bold', size: 14 },
+									}
+								}
+							}
+						});
+					</script>
+	
+					<h6 class="mt-3">Rule Details:</h6>
+					{% for camp in campos[dim] %}
+						<div class="card mt-3">
+							<div class="card-body">
+								<h5 class="card-title">Field: <b>{{ camp }}</b></h5>
+								{% if regras[camp] %}
+									<ul class="list-unstyled">
+										{% for rule in regras[camp] %}
+											<li><i class="bi bi-x-circle-fill text-danger"></i> {{ rule }}</li>
+										{% endfor %}
+									</ul>
+								{% else %}
+									<p class="card-text"><i class="bi bi-check-circle-fill text-success"></i> All rules were met, good job!</p>
+								{% endif %}
+							</div>
+						</div>
 					{% endfor %}
-				</ul>
-			{% endif %}
-		</div>
+	
+				{% endif %}
+			</div>
 		{% endfor %}
-		{% endif %}
 	</div>
-	{% endfor %}
-</div>
+	
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-<hr>
+    <hr>
 
-<p>Baixar relatório detalhado, clique no botão "Baixar relatório":</p>
-<a href="{{ url_for('download') }}" class="btn btn-info">Baixar relatório</a>
-<a href="{{ url_for('index') }}" class="btn btn-primary">Voltar ao início</a>
-
+    <p>Download detailed report:</p>
+    <a href="{{ url_for('download') }}" class="btn btn-info">Download Report</a>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+</main>
 {% endblock %}

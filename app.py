@@ -452,6 +452,7 @@ def processamento():
     filepath = os.path.join(DATA_FOLDER, filename)
     session["arquivo_download"] = filepath
     preliminary_results.to_excel(filepath)
+    print(preliminary_results.head(5))
 
     return redirect(url_for("relatorio"))
 
@@ -460,13 +461,21 @@ def processamento():
 def relatorio():
     return render_template(
         "report.html",
-        adequacao_total=session["adequacao_total"],
-        adequacao_por_dimensao_adequacao=session["adequacao_por_dimensao_adequacao"],
-        adequacao_por_dimensao_dimencoes=session["adequacao_por_dimensao_dimencoes"],
-        dimensoes=session["dimensoes"],
-        campos=session["campos"],
-        valores_campos=session["valores_campos"],
-        regras=session["regras"],
+        adequacao_total=session.get("adequacao_total", 0),
+        adequacao_por_dimensao_adequacao=session.get("adequacao_por_dimensao_adequacao", []),
+        adequacao_por_dimensao_dimencoes=session.get("adequacao_por_dimensao_dimencoes", []),
+        dimensoes=session.get("dimensoes", {}),
+        campos=session.get("campos", {}),
+        valores_campos=session.get("valores_campos", {}),
+        regras=session.get("regras", {}),
+        soma_total_0=session.get("soma_total_0", 0),
+        soma_total_1=session.get("soma_total_1", 0),
+        dimension_labels=session.get("dimension_labels", []),
+        dimension_mismatches=session.get("dimension_mismatches", []),
+        dimension_matches=session.get("dimension_matches", []),
+        dimension_mismatch_counts=session.get("dimension_mismatch_counts", {}),
+        heatmap_data = session.get("heatmap_data", {})
+
     )
 
 

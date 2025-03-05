@@ -344,7 +344,13 @@ def calculate_adequacy(results_df, dimensions, session):
 
 
 def analyze_results(preliminary_results, session):
-    """Analyzes preliminary results to calculate adequacy scores and prepare data for reporting."""
+    """
+    Analyzes preliminary results to calculate adequacy scores and prepare data for reporting.
+
+    Args:
+        preliminary_results (pd.DataFrame): DataFrame containing the data quality check results.
+        session (flask.session): Flask session object to store analysis results.
+    """
 
     # Adequacy by rule
     adequacy_by_rule = (
@@ -373,13 +379,17 @@ def analyze_results(preliminary_results, session):
         .reset_index()
     )
 
+    session["soma_total_0"] = int(total_adequacy['num_mismatches'].iloc[0])  # Ensure integer for session
+    session["soma_total_1"] = int(total_adequacy['num_matches'].iloc[0])  # Ensure integer for session
+
     total_adequacy["Total"] = (
         total_adequacy["num_mismatches"] + total_adequacy["num_matches"]
     )
     total_adequacy["Adequacy"] = (
         total_adequacy["num_matches"] / total_adequacy["Total"]
     ) * 100
-    session["adequacao_total"] = total_adequacy["Adequacy"].astype("int").to_list()[0]
+    session["adequacao_total"] = int(total_adequacy["Adequacy"].iloc[0]) #Ensure Integer
+
 
     # Adequacy by Dimension
     adequacy_by_dimension = (
@@ -397,15 +407,28 @@ def analyze_results(preliminary_results, session):
         adequacy_by_dimension["num_matches"] / adequacy_by_dimension["Total"]
     ) * 100
 
-    adequacy_by_dimension = adequacy_by_dimension[["Dimensão", "Adequacy"]]
-    adequacy_by_dimension = adequacy_by_dimension.sort_values(by=["Dimensão"])
-
-    session["adequacao_por_dimensao_dimencoes"] = adequacy_by_dimension[
-        "Dimensão"
-    ].to_list()
+    # Store data for Stacked Bar Chart (Completion Breakdown by Dimension)
+    session["dimension_labels"] = adequacy_by_dimension["Dimensão"].to_list()
+    session["dimension_mismatches"] = adequacy_by_dimension["num_mismatches"].to_list()
+    session["dimension_matches"] = adequacy_by_dimension["num_matches"].to_list()
+    session["adequacao_por_dimensao_dimencoes"] = adequacy_by_dimension["Dimensão"].to_list()
     session["adequacao_por_dimensao_adequacao"] = (
         adequacy_by_dimension["Adequacy"].astype("int").to_list()
     )
+
+
+    # Prepare data for Donut Chart (Distribution of Incomplete Fields)
+    dimension_mismatch_counts = adequacy_by_dimension.set_index("Dimensão")["num_mismatches"].to_dict()
+    session["dimension_mismatch_counts"] = dimension_mismatch_counts
+
+    #Prepare data for HeatMap chart
+    heatmap_data = adequacy_by_rule_clean.groupby(["Dimensão", "Campo_Metadado"]).agg(
+    total_matches=("num_matches", "sum"),
+    total_mismatches=("num_mismatches", "sum")).reset_index()
+    heatmap_data["total"] = heatmap_data["total_matches"]+ heatmap_data["total_mismatches"]
+    heatmap_data["adequacy"] = heatmap_data["total_matches"] / heatmap_data["total"]*100
+    heatmap_data = heatmap_data.pivot(index="Campo_Metadado", columns="Dimensão", values="adequacy")
+    session['heatmap_data'] = heatmap_data.fillna(0).applymap(lambda x: int(x)).to_dict('index')
 
     adequacy_by_dimension = adequacy_by_dimension.query("Adequacy != 100")
     adequacy_by_dimension = adequacy_by_dimension.sort_values(by=["Dimensão"])

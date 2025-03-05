@@ -1,4 +1,3 @@
-<!--Desenvolvido pelo Abeil coelho Junior -->
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -6,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="O DataQ Culture é uma ferramenta inovadora de avaliação de qualidade de dados para acervos culturais. Desenvolvido como projeto de mestrado na Universidade Federal do Espírito Santo (Ufes) no Brasil, o DataQ Culture foi criado para ajudar profissionais e instituições a garantir a integridade e a precisão dos dados em seus acervos culturais.">
   <meta name="author" content="Abeil Coelho Jr.">
-  <title>{% block title %} {% endblock %}DataQ</title>
+  <title>{% block title %} {% endblock %} DataQ</title>
 
+  <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}">
@@ -15,78 +15,80 @@
   <link rel="mask-icon" href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}" color="#000000">
   <meta name="msapplication-TileColor" content="#ffffff">
   <meta name="theme-color" content="#ffffff">
+
+  <!-- Bootstrap & Custom Styles -->
+  <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+
   <script>
-        function showDiv() {
-            document.getElementById('showme').style.display = "block";
-            document.getElementsByClassName('blur')[0].style.filter = "blur(8px)";
-        }
+      function showDiv() {
+          document.getElementById('showme').style.display = "block";
+          document.getElementsByClassName('blur')[0].style.filter = "blur(8px)";
+      }
   </script>
 
   <style>
+    /* General Placeholder Style */
     .bd-placeholder-img {
       font-size: 1.125rem;
       text-anchor: middle;
-      -webkit-user-select: none;
-      -moz-user-select: none;
       user-select: none;
     }
 
+    /* Larger Screens */
     @media (min-width: 768px) {
       .bd-placeholder-img-lg {
         font-size: 3.5rem;
       }
     }
 
-    .b-example-divider {
-      height: 3rem;
-      background-color: rgba(0, 0, 0, .1);
-      border: solid rgba(0, 0, 0, .15);
-      border-width: 1px 0;
-      box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+    /* Loading Screen */
+    #showme {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(255, 255, 255, 0.9);
+      z-index: 1050;
     }
 
-    .b-example-vr {
-      flex-shrink: 0;
-      width: 1.5rem;
-      height: 100vh;
-    }
-
-    .bi {
-      vertical-align: -.125em;
-      fill: currentColor;
-    }
-
-    .nav-scroller {
-      position: relative;
-      z-index: 2;
-      height: 2.75rem;
-      overflow-y: hidden;
-    }
-
-    .nav-scroller .nav {
-      display: flex;
-      flex-wrap: nowrap;
-      padding-bottom: 1rem;
-      margin-top: -1px;
-      overflow-x: auto;
-      text-align: center;
-      white-space: nowrap;
-      -webkit-overflow-scrolling: touch;
+    /* Footer */
+    .footer-text {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #6c757d;
     }
   </style>
-  <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 
 <body class="text-center">
-    <div id="showme" class="container fixed-top h-100  justify-content-center" style="display:none">
-      <img src="{{ url_for('static', filename='loading.gif') }}" class="img-responsive" style="margin: 0 auto;" alt="Carregando">
-      <p>Aguarde um instante enquando os dados são avaliados...</p>
+  
+  <!-- Loading Screen -->
+  <div id="showme" style="display:none">
+    <div class="text-center">
+      <img src="{{ url_for('static', filename='loading.gif') }}" class="img-fluid" alt="Carregando">
+      <p class="mt-2">Aguarde um instante enquanto os dados são avaliados...</p>
     </div>
+  </div>
+  <!-- <div id="showme" class="container fixed-top h-100  justify-content-center" style="display:none">
+    <img src="{{ url_for('static', filename='loading.gif') }}" class="img-responsive" style="margin: 0 auto;" alt="Carregando">
+    <p>Aguarde um instante enquando os dados são avaliados...</p>
+  </div> -->
+
+  <main class="container">
     {% block content %} {% endblock %}
-    <p class="mt-5 mb-3 text-muted"><a class="text-reset text-decoration-none" href="https://www.linkedin.com/in/abeil/">Desenvolvido por Abeil Coelho Jr.</a></p>
   </main>
 
-</body>
+  <!-- Footer -->
+  <footer>
+    <p class="footer-text">
+      <a class="text-reset text-decoration-none" href="https://www.linkedin.com/in/abeil/">Desenvolvido por Abeil Coelho Jr.</a>
+    </p>
+  </footer>
 
+</body>
 </html>
