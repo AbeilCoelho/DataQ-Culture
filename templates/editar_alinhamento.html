@@ -10,7 +10,7 @@
 
         {% for key, value in cabecalho_usuario.items() %}
         <div class="form-group mb-5">
-          <label class="form-label font-weight-bold" for="{{ column }}"><b>{{ key }}</b></label>
+          <label class="form-label font-weight-bold text-primary" for="{{ column }}"><b>{{ key }}</b></label>
           <select name="{{ value }}" class="form-control" id="{{ value }}">
             <option value="{{ value }}" selected>{{ value }}</option>
             {% for elemento_cco in esquema_cco %}
