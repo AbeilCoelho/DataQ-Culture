@@ -19,7 +19,7 @@ For detailed installation steps, [watch this video](https://youtu.be/2aTdY7H0qG0
 
 3. Execute the `app.py` file.
 4. An IP address will appear in the terminal. Access this IP address in your browser.<br>
-4.1 It will be something like "http://127.0.0.1:5000/"
+4.1 It will be something like "http://127.0.0.1:5001/"
 
 5. Upload a CSV file.
 6. Align the columns of your file with those of CCO. For more details on this step, refer to [this article](https://doi.org/10.5007/1518-2924.2023.e90510).
