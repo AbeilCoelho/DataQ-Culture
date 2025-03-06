@@ -1,54 +1,54 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<main class="home w-100 m-auto blur">        
+<main class="home w-100 m-auto blur">
     {% if lista_pretendentes_crosswalk | length > 0 %}
       <div class="alert alert-primary" role="alert">
-      <h4 class="alert-heading">Esse arquivo já foi alinhado!</h4>
+      <h4 class="alert-heading">This file has already been matched!</h4>
       {% for key, value in lista_pretendentes_crosswalk.items() %}
         <form action="{{url_for('processamento')}}" method="POST">
           <label for="{{ key }}" class="form-label">{{ key }}</label>
           <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
           <input hidden id="{{ key }}" name="ind_rec" value="1"><br>
-          <button class="w-25 btn btn-sm btn-primary" type="submit" onclick="showDiv()">Processar</button>
+          <button class="w-25 btn btn-sm btn-primary" type="submit" onclick="showDiv()">Process</button>
         </form>
 
-          <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
+          <form action="{{url_for('recuperar_alinhamento')}}" method="POST">
             <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
             <input hidden id="{{ key }}" name="ind_rec" value="2">
             <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
-            <button class="w-25 btn btn-sm btn-info" type="submit">Editar</button>
+            <button class="w-25 btn btn-sm btn-info" type="submit">Edit</button>
           </form>
-          <form action="{{url_for('recuperar_alinhamento')}}" method="POST"> 
+          <form action="{{url_for('recuperar_alinhamento')}}" method="POST">
             <input hidden id="{{ key }}" name="recuperacao" value="{{ value }}">
             <input hidden id="{{ key }}" name="ind_rec" value="3">
             <input hidden id="{{ key }}" name="nome_rec" value="{{ key }}">
-            <button class="w-25 btn btn-sm btn-warning" type="submit">Excluir</button></form>
+            <button class="w-25 btn btn-sm btn-warning" type="submit">Delete</button></form>
       {% endfor %}
     </div>
     {% endif %}
 
       <form action="{{url_for('alinhamento')}}" method="POST">
         <div class="mb-5">
-          <label for="nome_depara" class="form-label font-weight-bold"><b>NOME DO ALINHAMENTO</b></label>
-          <input required name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="Com qual nome deseja salvar este alinhamento?">
+          <label for="nome_depara" class="form-label font-weight-bold"><b>ALIGNMENT NAME</b></label>
+          <input required name="nome_depara" type="text" class="form-control" id="nome_depara" placeholder="What name do you want to save this alignment as?">
         </div>
         {% for key, value in cabecalho_usuario.items() %}
         <div class="form-group mb-5">
-          <label class="form-label font-weight-bold"><b>{{ key }}</b></label>
+          <label class="form-label font-weight-bold text-primary"><b>{{ key }}</b></label>
           <select name="{{ value }}" class="form-control" id="{{ value }}">
-            <option value="Off" selected disabled>Selecione</option>
+            <option value="Off" selected disabled>Select</option>
             {% for elemento_cco in esquema_cco %}
             <option value="{{ elemento_cco }}">{{ elemento_cco }}</option>
             {% endfor %}
-            <option value="Não utilizar">Não utilizar</option>
+            <option value="Não utilizar">Do not use</option>
 
           </select>
           <input class="form-check-input" name="vocabulario_controlado_{{ value }}" type="checkbox" value="{{ key }}">
-          <label class="form-check-label">Usa vocabulário controlado</label>
+          <label class="form-check-label">Uses controlled vocabulary</label>
         </div>
 
         {% endfor %}
-        <button class="w-100 btn btn-sm btn-primary" type="submit" onclick="showDiv()">Avançar</button>
+        <button class="w-100 btn btn-sm btn-primary" type="submit" onclick="showDiv()">Next</button>
       </form>
       {% endblock %}

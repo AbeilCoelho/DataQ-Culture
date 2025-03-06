@@ -218,95 +218,95 @@ def alinhamento():
             return render_template("processamento-falha.html")
 
     if request.method == "POST":
-        try:
-            # Extract form data
-            new_crosswalk = request.form.items()
-            crosswalk, crosswalk_vocabulary = [], []
+        #try:
+        # Extract form data
+        new_crosswalk = request.form.items()
+        crosswalk, crosswalk_vocabulary = [], []
 
-            for key, value in new_crosswalk:
-                if "vocabulario_controlado" in key:
-                    crosswalk_vocabulary.append(value)
-                else:
-                    crosswalk.append(value)
+        for key, value in new_crosswalk:
+            if "vocabulario_controlado" in key:
+                crosswalk_vocabulary.append(value)
+            else:
+                crosswalk.append(value)
 
-            if not crosswalk:
-                print("Error: Crosswalk data is empty.")
-                return render_template("processamento-falha.html")
-
-            # Generate a key for the column structure
-            key_user_file_header = "".join(session["cabecalho_usuario_lista"]).replace(
-                " ", "_"
-            )
-            crosswalk_name = crosswalk.pop(0)  # Extract title from crosswalk
-
-            # Load existing crosswalk mappings
-            try:
-                # Remover crosswalk com mesmo nome e colunas
-                existing_crosswalk = pd.read_parquet(crosswalk_file)
-
-                # Remove existing crosswalks with the same name and columns
-                existing_crosswalk = existing_crosswalk.query(
-                    "colunas != @key_user_file_header or nome != @crosswalk_name"
-                )
-
-                new_crosswalk_id = (
-                    int(existing_crosswalk["id"].max()) + 1
-                    if not existing_crosswalk.empty
-                    else 1
-                )
-
-            except FileNotFoundError:
-                print("Crosswalk file not found. Creating a new one.")
-                existing_crosswalk = pd.DataFrame(columns=["nome", "colunas", "id"])
-                new_crosswalk_id = 1
-            except Exception as e:
-                print(f"Error loading crosswalk file: {e}")
-                return render_template("processamento-falha.html")
-
-            # Create a new crosswalk entry
-            novo_crosswalk_df = pd.DataFrame(
-                [[crosswalk_name, key_user_file_header, new_crosswalk_id]],
-                columns=["nome", "colunas", "id"],
-            )
-
-            # Save updated crosswalks
-            croswalks_salvos = pd.concat(
-                [existing_crosswalk, novo_crosswalk_df], ignore_index=True
-            )
-            croswalks_salvos.to_parquet(crosswalk_file)
-
-            # Create dictionary mapping old column names to new ones
-            crosswalk_dict = dict(zip(session["cabecalho_usuario_lista"], crosswalk))
-
-            # Map controlled vocabulary fields
-            print("Before mapping vocabulario:", crosswalk_vocabulary)
-            crosswalk_vocabulary = [
-                crosswalk_dict.get(col, col) for col in crosswalk_vocabulary
-            ]
-            print("After mapping vocabulario:", crosswalk_vocabulary)
-
-            # Save crosswalk mapping to JSON
-            caminho_crosswalk = os.path.join(
-                DATA_FOLDER, "alinhamentos", str(new_crosswalk_id)
-            )
-            with open(caminho_crosswalk, "w") as file:
-                json.dump(crosswalk_dict, file)
-
-            # Save controlled vocabulary mapping to CSV
-            caminho_crosswalk_vocabulario = os.path.join(
-                DATA_FOLDER, "alinhamentos", f"{new_crosswalk_id}_vocabulario"
-            )
-            pd.DataFrame(crosswalk_vocabulary, columns=["Campos_Ajutados"]).to_csv(
-                caminho_crosswalk_vocabulario, index=False
-            )
-
-            # Update session and redirect
-            session["caminho_crosswalk"] = caminho_crosswalk
-            return redirect(url_for("processamento"))
-
-        except Exception as e:
-            print(f"Error processing POST request in alinhamento: {e}")
+        if not crosswalk:
+            print("Error: Crosswalk data is empty.")
             return render_template("processamento-falha.html")
+
+        # Generate a key for the column structure
+        key_user_file_header = "".join(session["user_file_header_list"]).replace(
+            " ", "_"
+        )
+        crosswalk_name = crosswalk.pop(0)  # Extract title from crosswalk
+
+        # Load existing crosswalk mappings
+        try:
+            # Remover crosswalk com mesmo nome e colunas
+            existing_crosswalk = pd.read_parquet(crosswalk_file)
+
+            # Remove existing crosswalks with the same name and columns
+            existing_crosswalk = existing_crosswalk.query(
+                "colunas != @key_user_file_header or nome != @crosswalk_name"
+            )
+
+            new_crosswalk_id = (
+                int(existing_crosswalk["id"].max()) + 1
+                if not existing_crosswalk.empty
+                else 1
+            )
+
+        except FileNotFoundError:
+            print("Crosswalk file not found. Creating a new one.")
+            existing_crosswalk = pd.DataFrame(columns=["nome", "colunas", "id"])
+            new_crosswalk_id = 1
+        except Exception as e:
+            print(f"Error loading crosswalk file: {e}")
+            return render_template("processamento-falha.html")
+
+        # Create a new crosswalk entry
+        novo_crosswalk_df = pd.DataFrame(
+            [[crosswalk_name, key_user_file_header, new_crosswalk_id]],
+            columns=["nome", "colunas", "id"],
+        )
+
+        # Save updated crosswalks
+        croswalks_salvos = pd.concat(
+            [existing_crosswalk, novo_crosswalk_df], ignore_index=True
+        )
+        croswalks_salvos.to_parquet(crosswalk_file)
+
+        # Create dictionary mapping old column names to new ones
+        crosswalk_dict = dict(zip(session["user_file_header_list"], crosswalk))
+
+        # Map controlled vocabulary fields
+        print("Before mapping vocabulario:", crosswalk_vocabulary)
+        crosswalk_vocabulary = [
+            crosswalk_dict.get(col, col) for col in crosswalk_vocabulary
+        ]
+        print("After mapping vocabulario:", crosswalk_vocabulary)
+
+        # Save crosswalk mapping to JSON
+        caminho_crosswalk = os.path.join(
+            DATA_FOLDER, "alinhamentos", str(new_crosswalk_id)
+        )
+        with open(caminho_crosswalk, "w") as file:
+            json.dump(crosswalk_dict, file)
+
+        # Save controlled vocabulary mapping to CSV
+        caminho_crosswalk_vocabulario = os.path.join(
+            DATA_FOLDER, "alinhamentos", f"{new_crosswalk_id}_vocabulario"
+        )
+        pd.DataFrame(crosswalk_vocabulary, columns=["Campos_Ajutados"]).to_csv(
+            caminho_crosswalk_vocabulario, index=False
+        )
+
+        # Update session and redirect
+        session["caminho_crosswalk"] = caminho_crosswalk
+        return redirect(url_for("processamento"))
+
+        # except Exception as e:
+        #     print(f"Error processing POST request in alinhamento: {e}")
+        #     return render_template("processamento-falha.html")
 
 
 @app.route("/recuperar_alinhamento", methods=["POST"])
@@ -451,8 +451,9 @@ def processamento():
     filename = session["user_sent_filename"] + ".xlsx"
     filepath = os.path.join(DATA_FOLDER, filename)
     session["arquivo_download"] = filepath
+
+    preliminary_results.rename(columns={'0': 'num_mismatches', '1': 'num_matches'}, inplace=True)
     preliminary_results.to_excel(filepath)
-    print(preliminary_results.head(5))
 
     return redirect(url_for("relatorio"))
 

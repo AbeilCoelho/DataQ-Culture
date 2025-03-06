@@ -147,7 +147,7 @@ def verificador(
     if valor == "<-99>":
         return False
 
-    if nome_regra == "Fazer uso de vocabulário controlado":
+    if nome_regra == "Use controlled vocabulary":
         if controlled_vocab is None:
             print("Controlled vocabulary is required but not provided.")
             return False
@@ -158,7 +158,7 @@ def verificador(
         )
         return controlled_check.shape[0] > 0
 
-    elif nome_regra == "Usar o mesmo idioma do catálogo":
+    elif nome_regra == "Use the same language as the catalog":
         return True  # always returns True
 
     # Handle multivalued fields (split by '|')

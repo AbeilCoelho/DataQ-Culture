@@ -2,14 +2,14 @@
 
 {% block content %}
 <main class="home w-100 m-auto">
-    <p style="color:green;">O arquivo "{{ nome_arquivo | safe}}" recebido com sucesso!</p>
-    <p><b>Delimitador:</b> '{{ delimitador }}'. <b>Encoding:</b> '{{ encoding }}'.</p>
-    <p>Você será redirecionado em 2 segundos...</p>
+    <p style="color:green;">The file "{{ nome_arquivo | safe}}" received successfully!</p>
+    <p><b>Delimiter:</b> '{{ delimitador }}'. <b>Encoding:</b> '{{ encoding }}'.</p>
+    <p>You will be redirected in 2 seconds...</p>
     <script>
         var timer = setTimeout(function() {
             window.location='{{ url_for('alinhamento') }}'
         }, 2000);
     </script>
     <br>
-    <p>Caso não seja redirecionado, clique <a href="{{ url_for('alinhamento') }}">aqui</a></p>
+    <p>If you are not redirected, click <a href="{{ url_for('alinhamento') }}">here</a></p>
 {% endblock %}

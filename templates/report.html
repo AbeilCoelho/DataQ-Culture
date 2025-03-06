@@ -39,12 +39,12 @@
         <canvas id="donutChart"></canvas>
     </div>
 	<hr> -->
-    <h3 class="mt-4">Heatmap Collection Adequacy by Dimension</h3>
+    <h3 class="mt-4">Heatmap Metadata Adequacy by Dimension</h3>
     <div class="chart-container">
         <table id="heatmap">
             <thead>
                 <tr>
-                    <th>Collection</th>
+                    <th>Metadata/Dimension</th>
                     {% if heatmap_data %}
                         {% for field in heatmap_data[heatmap_data|first].keys() %}
                             <th>{{ field }}</th>
@@ -269,11 +269,11 @@
 						<div class="card-body">
 							<h5 class="card-title">Field: <b>{{ campos[dim][0] }}</b></h5>
 							<p class="card-text">Adequacy: <b>{{ valores_campos[dim][0] }}%</b></p>
-							<h6 class="card-subtitle mb-2 text-muted">Rule Details:</h6>
+							<h6 class="card-subtitle mb-2 text-muted">Rules to Follow:</h6>
 							{% if regras[campos[dim][0]] %}
 							<ul class="list-unstyled">
 								{% for rule in regras[campos[dim][0]] %}
-									<li><i class="bi bi-x-circle-fill text-danger"></i> {{ rule }}</li>
+									<li><i class="bi bi-exclamation-triangle-fill text-warning"></i> {{ rule }}</li>
 								{% endfor %}
 							</ul>
 							{% else %}
@@ -328,10 +328,12 @@
 						<div class="card mt-3">
 							<div class="card-body">
 								<h5 class="card-title">Field: <b>{{ camp }}</b></h5>
+                                
 								{% if regras[camp] %}
+                                <h6 class="card-subtitle mb-2 text-muted">Rules to Follow:</h6>
 									<ul class="list-unstyled">
 										{% for rule in regras[camp] %}
-											<li><i class="bi bi-x-circle-fill text-danger"></i> {{ rule }}</li>
+											<li><i class="bi bi-exclamation-triangle-fill text-warning"></i> {{ rule }}</li>
 										{% endfor %}
 									</ul>
 								{% else %}
